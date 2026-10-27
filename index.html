@@ -119,6 +119,11 @@ textarea.inp{height:auto;padding:12px 14px;font-size:15px;resize:none}
 .btn.danger{border-color:rgba(255,120,120,.4);color:var(--hol-tx)}
 .btn.danger.armed{background:var(--hol-bg)}
 .btn:disabled{opacity:.5;cursor:default}
+body.popup .app{display:none}
+body.popup .backdrop{background:var(--card)}
+body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-radius:0;overflow-y:auto}
+.done{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--card);font-size:18px}
+.done span{font-size:14px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -226,6 +231,11 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbwf2YCDrjZ8IbvF-Syi1vV4
 const EN_MONTH = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const WEEK = ['일','월','화','수','목','금','토'];
 const REFRESH_MS = 5 * 60 * 1000;
+const PARAMS = new URLSearchParams(location.search);
+const WALLPAPER = PARAMS.get('mode') === 'wallpaper';
+const POPUP = PARAMS.get('popup') || '';
+let channel = null;
+try { channel = new BroadcastChannel('planner'); } catch (e) {}
 
 const now = new Date();
 const state = { y: now.getFullYear(), m: now.getMonth(), events: [], todos: [], synced: '', error: '', key: '', modal: null, dayKey: '' };
@@ -245,7 +255,7 @@ const todayDate = () => { const d = new Date(); return new Date(d.getFullYear(),
 const korDate = (d) => (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + WEEK[d.getDay()] + ')';
 
 function loadKey() {
-  const m = location.hash.match(/key=([A-Za-z0-9]+)/);
+  const m = (location.hash + location.search).match(/key=([A-Za-z0-9]+)/);
   if (m) return m[1];
   try { return localStorage.getItem('planner_key') || ''; } catch (e) { return ''; }
 }
@@ -257,7 +267,7 @@ async function api(action, params, post) {
   const payload = Object.assign({}, params || {}, { action: action, key: state.key });
   const res = post
     ? await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) })
-    : await fetch(API_URL + '?' + new URLSearchParams(payload));
+    : await fetch(API_URL + '?' + new URLSearchParams(Object.assign(payload, { _: Date.now() })), { cache: 'no-store' });
   const data = await res.json();
   if (!data.ok) throw new Error(data.error || '요청 실패');
   return data;
@@ -462,13 +472,45 @@ function openModal(kind, title, data, readOnly) {
   if (!readOnly) focusSoon($('fTitle'));
 }
 
+function openPopup(p) {
+  const w = 520;
+  const h = 720;
+  const left = Math.round((screen.availLeft || 0) + (screen.availWidth - w) / 2);
+  const top = Math.round((screen.availTop || 0) + (screen.availHeight - h) / 2);
+  const url = location.origin + location.pathname + '?' + new URLSearchParams(p) + '#key=' + state.key;
+  let win = null;
+  try { win = window.open(url, 'plannerPopup', 'popup=yes,width=' + w + ',height=' + h + ',left=' + left + ',top=' + top); } catch (e) {}
+  state.fastUntil = Date.now() + 3 * 60 * 1000;
+  return !!win;
+}
+
+function afterChange() {
+  if (channel) channel.postMessage('changed');
+  if (POPUP) {
+    showDone('저장되었습니다');
+    return;
+  }
+  closeModal();
+  load();
+}
+
+function showDone(msg) {
+  document.body.replaceChildren();
+  const box = el('div', 'done', msg);
+  box.appendChild(el('span', '', '이 창은 자동으로 닫힙니다. 닫히지 않으면 직접 닫아주세요.'));
+  document.body.appendChild(box);
+  setTimeout(() => window.close(), 300);
+}
+
 function openAdd(dateStr) {
+  if (WALLPAPER && openPopup({ popup: 'add', date: dateStr })) return;
   $('dlgInfo').textContent = '저장하면 구글 캘린더를 거쳐 폰의 삼성 캘린더에도 표시됩니다';
   openModal('새 일정', korDate(parseYmd(dateStr)), { id: '', cal: 'school', title: '', date: dateStr, allDay: false, startTime: '09:00', endTime: '10:00', memo: '' });
 }
 
 function openEdit(ev) {
   const date = ev.start.slice(0, 10);
+  if (WALLPAPER && openPopup({ popup: 'edit', id: ev.id, cal: ev.cal, date: date })) return;
   $('dlgInfo').textContent = ev.recurring ? '반복 일정은 폰의 삼성 캘린더에서 수정해 주세요' : '마지막 수정 ' + ev.updated;
   openModal(ev.recurring ? '반복 일정' : '일정 수정', korDate(parseYmd(date)), {
     id: ev.id, oldCal: ev.cal, cal: ev.cal, title: ev.title, date: date, allDay: ev.allDay,
@@ -479,6 +521,7 @@ function openEdit(ev) {
 }
 
 function closeModal() {
+  if (POPUP) { showDone('취소했습니다'); return; }
   if (document.activeElement) document.activeElement.blur();
   $('evBackdrop').classList.remove('open');
   state.modal = null;
@@ -507,8 +550,7 @@ async function saveModal() {
   try {
     if (m.id) await api('update', Object.assign(payload, { id: m.id, oldCal: m.oldCal }), true);
     else await api('create', payload, true);
-    closeModal();
-    await load();
+    afterChange();
   } catch (e) {
     $('dlgMsg').textContent = '저장 실패: ' + e.message;
   } finally {
@@ -527,8 +569,7 @@ async function deleteModal() {
   del.disabled = true;
   try {
     await api('delete', { id: state.modal.id, cal: state.modal.oldCal }, true);
-    closeModal();
-    await load();
+    afterChange();
   } catch (e) {
     $('dlgMsg').textContent = '삭제 실패: ' + e.message;
   } finally {
@@ -572,7 +613,7 @@ $('dlgCancel').addEventListener('click', closeModal);
 $('dlgSave').addEventListener('click', saveModal);
 $('dlgDelete').addEventListener('click', deleteModal);
 $('evBackdrop').addEventListener('click', (e) => { if (e.target === $('evBackdrop')) closeModal(); });
-$('fTitle').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveModal(); });
+$('fTitle').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) saveModal(); });
 $('evBackdrop').addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 $('todoAdd').addEventListener('keydown', (e) => {
   if (e.key !== 'Enter' || e.isComposing) return;
@@ -591,14 +632,39 @@ $('keySave').addEventListener('click', () => {
   load();
 });
 
+async function startPopup() {
+  document.body.classList.add('popup');
+  document.title = POPUP === 'edit' ? '일정 수정 · 월간 계획표' : '새 일정 · 월간 계획표';
+  const date = PARAMS.get('date') || ymd(todayDate());
+  if (POPUP === 'add') { openAdd(date); return; }
+  try {
+    const next = ymd(addDays(parseYmd(date), 1));
+    const res = await api('list', { start: date, end: next });
+    state.events = res.events;
+    const ev = res.events.find((x) => x.id === PARAMS.get('id') && x.cal === PARAMS.get('cal'));
+    if (!ev) throw new Error('일정을 찾을 수 없습니다');
+    openEdit(ev);
+  } catch (e) {
+    openAdd(date);
+    $('dlgMsg').textContent = '일정을 불러오지 못했습니다: ' + e.message;
+  }
+}
+
+function startMain() {
+  tick();
+  setInterval(tick, 1000);
+  render();
+  load();
+  setInterval(load, REFRESH_MS);
+  setInterval(() => { if (state.fastUntil && Date.now() < state.fastUntil) load(); }, 5000);
+  setInterval(() => location.reload(), 3 * 60 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+  if (channel) channel.onmessage = () => { state.fastUntil = 0; load(); };
+}
+
 state.key = loadKey();
-tick();
-setInterval(tick, 1000);
-render();
-load();
-setInterval(load, REFRESH_MS);
-setInterval(() => location.reload(), 3 * 60 * 60 * 1000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+if (POPUP) startPopup();
+else startMain();
 </script>
 </body>
 </html>
