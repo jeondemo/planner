@@ -207,7 +207,7 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
     </div>
     <div class="field">
       <label class="lb" for="fTitle">제목</label>
-      <input class="inp" id="fTitle" placeholder="일정 제목 (★로 시작하면 D-day 표시)" maxlength="100" autocomplete="off">
+      <input class="inp" id="fTitle" placeholder="일정 제목 (!로 시작하면 D-day 표시)" maxlength="100" autocomplete="off">
     </div>
     <div class="field">
       <span class="lb">캘린더</span>
@@ -353,7 +353,7 @@ function lastDay(ev) {
 }
 
 function chipLabel(ev) {
-  return ev.title.replace(/^★\s*/, '★ ');
+  return ev.title;
 }
 
 function renderHeader() {
@@ -450,19 +450,19 @@ function renderDday() {
   box.replaceChildren();
   const ts = ymd(todayDate());
   const target = state.events
-    .filter((ev) => ev.cal !== 'holiday' && ev.title.startsWith('★') && ev.start.slice(0, 10) >= ts)
+    .filter((ev) => ev.cal !== 'holiday' && /^[!！★]/.test(ev.title) && ev.start.slice(0, 10) >= ts)
     .sort((a, b) => a.start.localeCompare(b.start))[0];
   const l = el('div', 'l');
   if (!target) {
     l.appendChild(el('span', 'k', '다가오는 일정'));
-    l.appendChild(el('span', 'd', '제목을 ★로 시작하면 여기에 D-day가 표시됩니다'));
+    l.appendChild(el('span', 'd', '제목을 !로 시작하면 여기에 D-day가 표시됩니다'));
     box.appendChild(l);
     return;
   }
   const d = parseYmd(target.start.slice(0, 10));
   const diff = Math.round((d - todayDate()) / 86400000);
   l.appendChild(el('span', 'k', '다가오는 일정'));
-  l.appendChild(el('span', 'n', target.title.replace(/^★\s*/, '')));
+  l.appendChild(el('span', 'n', target.title.replace(/^[!！★]\s*/, '')));
   l.appendChild(el('span', 'd', korDate(d)));
   box.appendChild(l);
   box.appendChild(el('span', 'v', diff === 0 ? 'D-DAY' : 'D-' + diff));
