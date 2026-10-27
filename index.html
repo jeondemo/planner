@@ -303,10 +303,8 @@ function eventsOn(dateStr) {
   return list.sort((a, b) => rank(a) - rank(b) || a.start.localeCompare(b.start));
 }
 
-function chipLabel(ev, dateStr) {
-  const title = ev.title.replace(/^★\s*/, '★ ');
-  if (ev.allDay || ev.start.slice(0, 10) !== dateStr) return title;
-  return ev.start.slice(11, 16) + ' ' + title;
+function chipLabel(ev) {
+  return ev.title.replace(/^★\s*/, '★ ');
 }
 
 function renderHeader() {
