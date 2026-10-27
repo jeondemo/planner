@@ -158,7 +158,7 @@ textarea.inp{height:auto;padding:12px 14px;font-size:15px;resize:none}
       <h2>할 일</h2>
       <div class="list" id="todoList"></div>
       <label class="sr" for="todoAdd">할 일 추가</label>
-      <input class="todo-add" id="todoAdd" placeholder="+ 할 일 추가 (Enter)" maxlength="100">
+      <input class="todo-add" id="todoAdd" placeholder="+ 할 일 추가 (Enter)" maxlength="100" autocomplete="off">
     </div>
     <div class="card dday" id="dday"></div>
     <div class="foot" id="foot"><i class="dot"></i><span id="footText">불러오는 중…</span><button id="refresh">새로고침</button></div>
@@ -173,7 +173,7 @@ textarea.inp{height:auto;padding:12px 14px;font-size:15px;resize:none}
     </div>
     <div class="field">
       <label class="lb" for="fTitle">제목</label>
-      <input class="inp" id="fTitle" placeholder="일정 제목 (★로 시작하면 D-day 표시)" maxlength="100">
+      <input class="inp" id="fTitle" placeholder="일정 제목 (★로 시작하면 D-day 표시)" maxlength="100" autocomplete="off">
     </div>
     <div class="field">
       <span class="lb">캘린더</span>
@@ -551,6 +551,7 @@ function tick() {
 
 function focusSoon(input) {
   [30, 150, 400].forEach((ms) => setTimeout(() => {
+    window.focus();
     if (document.activeElement !== input) input.focus();
   }, ms));
 }
