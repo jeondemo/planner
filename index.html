@@ -503,14 +503,14 @@ function showDone(msg) {
 }
 
 function openAdd(dateStr) {
-  if (WALLPAPER && openPopup({ popup: 'add', date: dateStr })) return;
+  if (WALLPAPER) { openPopup({ popup: 'add', date: dateStr }); return; }
   $('dlgInfo').textContent = '저장하면 구글 캘린더를 거쳐 폰의 삼성 캘린더에도 표시됩니다';
   openModal('새 일정', korDate(parseYmd(dateStr)), { id: '', cal: 'school', title: '', date: dateStr, allDay: false, startTime: '09:00', endTime: '10:00', memo: '' });
 }
 
 function openEdit(ev) {
   const date = ev.start.slice(0, 10);
-  if (WALLPAPER && openPopup({ popup: 'edit', id: ev.id, cal: ev.cal, date: date })) return;
+  if (WALLPAPER) { openPopup({ popup: 'edit', id: ev.id, cal: ev.cal, date: date }); return; }
   $('dlgInfo').textContent = ev.recurring ? '반복 일정은 폰의 삼성 캘린더에서 수정해 주세요' : '마지막 수정 ' + ev.updated;
   openModal(ev.recurring ? '반복 일정' : '일정 수정', korDate(parseYmd(date)), {
     id: ev.id, oldCal: ev.cal, cal: ev.cal, title: ev.title, date: date, allDay: ev.allDay,
