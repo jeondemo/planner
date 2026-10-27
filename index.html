@@ -188,15 +188,13 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
       </div>
     </div>
     <div class="field">
-      <div class="timehead"><span class="lb" style="font-size:14px;color:var(--sub)">시간</span><label><input type="checkbox" id="fAllDay">종일</label></div>
+      <div class="timehead"><span class="lb" style="font-size:14px;color:var(--sub)">기간</span><span id="fDays" style="font-size:13px;font-weight:600;color:var(--accent)"></span></div>
       <div class="times">
-        <label class="sr" for="fDate">날짜</label>
+        <label class="sr" for="fDate">시작일</label>
         <input class="inp" type="date" id="fDate">
-        <label class="sr" for="fStart">시작 시간</label>
-        <input class="inp" type="time" id="fStart">
         <span style="color:var(--muted)">~</span>
-        <label class="sr" for="fEnd">종료 시간</label>
-        <input class="inp" type="time" id="fEnd">
+        <label class="sr" for="fEndDate">종료일</label>
+        <input class="inp" type="date" id="fEndDate">
       </div>
     </div>
     <div class="field">
@@ -311,6 +309,14 @@ function eventsOn(dateStr) {
   });
   const rank = (ev) => (ev.cal === 'holiday' ? 0 : ev.allDay ? 1 : 2);
   return list.sort((a, b) => rank(a) - rank(b) || a.start.localeCompare(b.start));
+}
+
+function lastDay(ev) {
+  const s = ev.start.slice(0, 10);
+  const e = ev.end.slice(0, 10);
+  if (e <= s) return s;
+  if (ev.allDay || ev.end.slice(11) === '00:00') return ymd(addDays(parseYmd(e), -1));
+  return e;
 }
 
 function chipLabel(ev) {
@@ -442,10 +448,13 @@ async function saveTodos() {
   catch (e) { state.error = '할 일 저장 실패: ' + e.message; renderFoot(); }
 }
 
-function setTimesEnabled() {
-  const all = $('fAllDay').checked;
-  $('fStart').disabled = all;
-  $('fEnd').disabled = all;
+function updateDays(fromStart) {
+  const s = $('fDate').value;
+  const e = $('fEndDate').value;
+  if (s && (!e || e < s || fromStart && !state.modal.endTouched)) $('fEndDate').value = s;
+  const end = $('fEndDate').value;
+  const n = s && end ? Math.round((parseYmd(end) - parseYmd(s)) / 86400000) + 1 : 0;
+  $('fDays').textContent = n > 1 ? n + '일간' : '';
 }
 
 function openModal(kind, title, data, readOnly) {
@@ -455,19 +464,17 @@ function openModal(kind, title, data, readOnly) {
   $('fTitle').value = data.title;
   document.querySelector('input[name="fCal"][value="' + data.cal + '"]').checked = true;
   $('fDate').value = data.date;
-  $('fAllDay').checked = data.allDay;
-  $('fStart').value = data.startTime;
-  $('fEnd').value = data.endTime;
+  $('fEndDate').value = data.endDate;
   $('fMemo').value = data.memo;
+  updateDays(false);
   $('dlgMsg').textContent = '';
   const del = $('dlgDelete');
   del.style.visibility = data.id && !readOnly ? 'visible' : 'hidden';
   del.classList.remove('armed');
   del.textContent = '삭제';
   $('dlgSave').style.display = readOnly ? 'none' : '';
-  ['fTitle', 'fDate', 'fAllDay', 'fStart', 'fEnd', 'fMemo'].forEach((id) => { $(id).disabled = !!readOnly; });
+  ['fTitle', 'fDate', 'fEndDate', 'fMemo'].forEach((id) => { $(id).disabled = !!readOnly; });
   document.querySelectorAll('input[name="fCal"]').forEach((r) => { r.disabled = !!readOnly; });
-  if (!readOnly) setTimesEnabled();
   $('evBackdrop').classList.add('open');
   if (!readOnly) focusSoon($('fTitle'));
 }
@@ -505,7 +512,7 @@ function showDone(msg) {
 function openAdd(dateStr) {
   if (WALLPAPER) { openPopup({ popup: 'add', date: dateStr }); return; }
   $('dlgInfo').textContent = '저장하면 구글 캘린더를 거쳐 폰의 삼성 캘린더에도 표시됩니다';
-  openModal('새 일정', korDate(parseYmd(dateStr)), { id: '', cal: 'school', title: '', date: dateStr, allDay: false, startTime: '09:00', endTime: '10:00', memo: '' });
+  openModal('새 일정', korDate(parseYmd(dateStr)), { id: '', cal: 'school', title: '', date: dateStr, endDate: dateStr, memo: '' });
 }
 
 function openEdit(ev) {
@@ -513,9 +520,8 @@ function openEdit(ev) {
   if (WALLPAPER) { openPopup({ popup: 'edit', id: ev.id, cal: ev.cal, date: date }); return; }
   $('dlgInfo').textContent = ev.recurring ? '반복 일정은 폰의 삼성 캘린더에서 수정해 주세요' : '마지막 수정 ' + ev.updated;
   openModal(ev.recurring ? '반복 일정' : '일정 수정', korDate(parseYmd(date)), {
-    id: ev.id, oldCal: ev.cal, cal: ev.cal, title: ev.title, date: date, allDay: ev.allDay,
-    startTime: ev.allDay ? '09:00' : ev.start.slice(11, 16),
-    endTime: ev.allDay ? '10:00' : ev.end.slice(11, 16),
+    id: ev.id, oldCal: ev.cal, cal: ev.cal, title: ev.title, date: date, endDate: lastDay(ev),
+    timed: !ev.allDay, origDate: date, origEndDate: lastDay(ev), endTouched: true,
     memo: ev.memo
   }, ev.recurring);
 }
@@ -533,17 +539,13 @@ async function saveModal() {
     cal: document.querySelector('input[name="fCal"]:checked').value,
     title: $('fTitle').value.trim(),
     date: $('fDate').value,
-    allDay: $('fAllDay').checked,
-    startTime: $('fStart').value,
-    endTime: $('fEnd').value,
+    endDate: $('fEndDate').value || $('fDate').value,
     memo: $('fMemo').value.trim()
   };
   if (!payload.title) { $('dlgMsg').textContent = '제목을 입력해 주세요'; $('fTitle').focus(); return; }
-  if (!payload.date) { $('dlgMsg').textContent = '날짜를 선택해 주세요'; return; }
-  if (!payload.allDay && (!payload.startTime || !payload.endTime || payload.endTime <= payload.startTime)) {
-    $('dlgMsg').textContent = '종료 시간이 시작 시간보다 늦어야 합니다';
-    return;
-  }
+  if (!payload.date) { $('dlgMsg').textContent = '시작일을 선택해 주세요'; return; }
+  if (payload.endDate < payload.date) { $('dlgMsg').textContent = '종료일이 시작일보다 빠를 수 없습니다'; return; }
+  if (m.timed && payload.date === m.origDate && payload.endDate === m.origEndDate) payload.keepTime = true;
   const btn = $('dlgSave');
   btn.disabled = true;
   btn.textContent = '저장 중…';
@@ -607,7 +609,8 @@ $('prev').addEventListener('click', () => { state.m--; if (state.m < 0) { state.
 $('next').addEventListener('click', () => { state.m++; if (state.m > 11) { state.m = 0; state.y++; } render(); load(); });
 $('goToday').addEventListener('click', () => { const t = todayDate(); state.y = t.getFullYear(); state.m = t.getMonth(); render(); load(); });
 $('refresh').addEventListener('click', () => location.reload());
-$('fAllDay').addEventListener('change', setTimesEnabled);
+$('fDate').addEventListener('change', () => updateDays(true));
+$('fEndDate').addEventListener('change', () => { if (state.modal) state.modal.endTouched = true; updateDays(false); });
 $('dlgClose').addEventListener('click', closeModal);
 $('dlgCancel').addEventListener('click', closeModal);
 $('dlgSave').addEventListener('click', saveModal);
