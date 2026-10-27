@@ -12,6 +12,7 @@
   --text:#E6EBF0;--sub:#B6C1CC;--muted:#8A97A6;--out:#7E8B99;--accent:#F2B84B;
   --school:#6EA8FE;--school-bg:rgba(110,168,254,.16);--school-tx:#B9D3FF;
   --personal:#F0A35E;--personal-bg:rgba(240,163,94,.16);--personal-tx:#F7C99A;
+  --pc:#9AA7B4;--pc-bg:rgba(154,167,180,.16);--pc-tx:#C3CCD6;
   --hol:#FF8A8A;--hol-bg:rgba(255,120,120,.14);--hol-tx:#FFB0B0;
   --sun:#FF9C9C;--sat:#8AB4FF
 }
@@ -33,6 +34,7 @@ button,input,textarea{font-family:inherit}
 .dot{width:10px;height:10px;flex:none;display:inline-block}
 .dot.school{border-radius:3px;background:var(--school)}
 .dot.personal{border-radius:50%;background:var(--personal)}
+.dot.pc{border-radius:2px;border:2px solid var(--pc);background:transparent;box-sizing:border-box}
 .dot.holiday{border-radius:2px;transform:rotate(45deg);background:var(--hol)}
 .week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;font-size:15px;font-weight:600;padding:0 14px;color:var(--sub)}
 .week span:first-child{color:var(--sun)}
@@ -68,6 +70,7 @@ button.ev-item:hover{background:#1B2836}
 .chip{display:block;font-size:13px;line-height:1.3;padding:4px 8px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:none;text-align:left;width:100%;cursor:pointer;flex:none;font-family:inherit}
 .chip.school{background:var(--school-bg);color:var(--school-tx)}
 .chip.personal{background:var(--personal-bg);color:var(--personal-tx)}
+.chip.pc{background:var(--pc-bg);color:var(--pc-tx)}
 .chip.holiday{background:var(--hol-bg);color:var(--hol-tx);cursor:default}
 .chip:not(.holiday):hover{filter:brightness(1.3)}
 .more{font-size:12px;color:var(--muted);padding:0 4px;flex:none}
@@ -115,7 +118,10 @@ button.ev-item:hover{background:#1B2836}
 .inp:focus,textarea.inp:focus{outline:none;border-color:var(--school)}
 textarea.inp{height:auto;padding:12px 14px;font-size:15px;resize:none}
 .inp:disabled{opacity:.5}
-.pills{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.pills{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pill.pc input{accent-color:var(--pc)}
+.pill.pc:has(input:checked){border-color:var(--pc);background:var(--pc-bg);color:var(--text)}
+.cal-hint{font-size:13px;color:var(--muted)}
 .pill{height:44px;display:flex;align-items:center;gap:10px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:16px;color:var(--sub);cursor:pointer}
 .pill input{width:16px;height:16px;margin:0}
 .pill.school input{accent-color:var(--school)}
@@ -161,6 +167,7 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
       <div class="legend">
         <span><i class="dot school"></i>학교</span>
         <span><i class="dot personal"></i>개인</span>
+        <span><i class="dot pc"></i>PC만</span>
         <span><i class="dot holiday"></i>공휴일</span>
       </div>
     </div>
@@ -207,7 +214,9 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
       <div class="pills">
         <label class="pill school"><input type="radio" name="fCal" value="school"><i class="dot school"></i>학교</label>
         <label class="pill personal"><input type="radio" name="fCal" value="personal"><i class="dot personal"></i>개인</label>
+        <label class="pill pc"><input type="radio" name="fCal" value="pc"><i class="dot pc"></i>PC만</label>
       </div>
+      <span class="cal-hint" id="calHint" style="display:none">PC만: 계획표에만 보이고 폰에는 표시되지 않아요</span>
     </div>
     <div class="field">
       <div class="timehead"><span class="lb" style="font-size:14px;color:var(--sub)">기간</span><span id="fDays" style="font-size:13px;font-weight:600;color:var(--accent)"></span></div>
@@ -422,7 +431,7 @@ function renderDay() {
     const body = el('span', 'ev-body');
     body.appendChild(el('span', 'ev-title', ev.title));
     const sub = [];
-    sub.push(ev.cal === 'school' ? '학교' : ev.cal === 'personal' ? '개인' : '공휴일');
+    sub.push(ev.cal === 'school' ? '학교' : ev.cal === 'personal' ? '개인' : ev.cal === 'pc' ? 'PC만 · 폰에는 안 보임' : '공휴일');
     const s = ev.start.slice(0, 10);
     const last = lastDay(ev);
     if (last !== s) sub.push(shortDate(s) + '~' + shortDate(last));
@@ -502,6 +511,11 @@ async function saveTodos() {
   catch (e) { state.error = '할 일 저장 실패: ' + e.message; renderFoot(); }
 }
 
+function updateCalHint() {
+  const c = document.querySelector('input[name="fCal"]:checked');
+  $('calHint').style.display = c && c.value === 'pc' ? '' : 'none';
+}
+
 function updateDays(fromStart) {
   const s = $('fDate').value;
   const e = $('fEndDate').value;
@@ -517,6 +531,7 @@ function openModal(kind, title, data, readOnly) {
   $('dlgTitle').textContent = title;
   $('fTitle').value = data.title;
   document.querySelector('input[name="fCal"][value="' + data.cal + '"]').checked = true;
+  updateCalHint();
   $('fDate').value = data.date;
   $('fEndDate').value = data.endDate;
   $('fMemo').value = data.memo;
@@ -668,6 +683,7 @@ $('dayBack').addEventListener('click', () => selectDay(ymd(todayDate())));
 $('dayAdd').addEventListener('click', () => openAdd(state.sel || ymd(todayDate())));
 document.addEventListener('pointerdown', () => { state.selAt = Date.now(); });
 $('fDate').addEventListener('change', () => updateDays(true));
+document.querySelectorAll('input[name="fCal"]').forEach((r) => r.addEventListener('change', updateCalHint));
 $('fEndDate').addEventListener('change', () => { if (state.modal) state.modal.endTouched = true; updateDays(false); });
 $('dlgClose').addEventListener('click', closeModal);
 $('dlgCancel').addEventListener('click', closeModal);
