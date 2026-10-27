@@ -339,7 +339,8 @@ function eventsOn(dateStr) {
     if (e > s && ev.end.slice(11) === '00:00') e = ymd(addDays(parseYmd(e), -1));
     return s <= dateStr && dateStr <= e;
   });
-  const rank = (ev) => (ev.cal === 'holiday' ? 0 : ev.allDay ? 1 : 2);
+  const order = { holiday: 0, personal: 1, school: 2, pc: 3 };
+  const rank = (ev) => (ev.cal in order ? order[ev.cal] : 9);
   return list.sort((a, b) => rank(a) - rank(b) || a.start.localeCompare(b.start));
 }
 
