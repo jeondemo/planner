@@ -479,6 +479,7 @@ function openEdit(ev) {
 }
 
 function closeModal() {
+  if (document.activeElement) document.activeElement.blur();
   $('evBackdrop').classList.remove('open');
   state.modal = null;
 }
@@ -550,9 +551,11 @@ function tick() {
 }
 
 function focusSoon(input) {
-  [30, 150, 400].forEach((ms) => setTimeout(() => {
+    [30, 150, 400].forEach((ms) => setTimeout(() => {
+    if (document.activeElement === input && document.hasFocus()) return;
     window.focus();
-    if (document.activeElement !== input) input.focus();
+    input.blur();
+    input.focus();
   }, ms));
 }
 ['fTitle', 'fMemo', 'todoAdd', 'keyInput'].forEach((id) => {
