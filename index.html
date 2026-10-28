@@ -8,13 +8,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#F5F2EB;--card:#FFFFFF;--card2:#EDE9E0;--today:#FFF7E3;--line:#DDD7CA;
-  --text:#1E2632;--sub:#4F5966;--muted:#6B7480;--out:#858C95;--accent:#F0A21F;
-  --school:#2F6FDE;--school-bg:#E5EDFB;--school-tx:#1D4FA8;
-  --personal:#E8832A;--personal-bg:#FDECDD;--personal-tx:#9A4A10;
-  --pc:#A3ACB6;--pc-bg:#EDEFF2;--pc-tx:#4D5762;
-  --hol:#D23C3C;--hol-bg:#FBE4E4;--hol-tx:#B02E2E;
-  --sun:#D23C3C;--sat:#2F62C9;
+  --bg:#FFFFFF;--card:#FFFFFF;--card2:#F3F5F7;--today:#FFF2CC;--line:#D5DBE2;--grid:#BCC5CF;
+  --text:#1B2430;--sub:#4A5562;--muted:#5A6573;--out:#8E97A1;--accent:#F0A21F;
+  --school:#2F6FDE;--school-bg:#EEF3FC;--school-tx:#1E3F80;
+  --personal:#E8832A;--personal-bg:#FDF2E8;--personal-tx:#8A450E;
+  --pc:#A3ACB6;--pc-bg:#F2F4F6;--pc-tx:#4A5562;
+  --hol:#C9302C;--hol-bg:#FBE4E4;--hol-tx:#B02E2E;
+  --sun:#C9302C;--sat:#2C5FC4;
   --navy:#1F3A5F;--p-text:#FFFFFF;--p-sub:#C9D6E6;--p-muted:#A9BCD3;--p-item:rgba(255,255,255,.07);--p-line:rgba(255,255,255,.18);
   --p-school:#6EA8FE;--p-personal:#F0A35E;--p-pc:#A3ACB6;--p-hol:#FF8A8A;--gold:#F2B84B
 }
@@ -22,16 +22,18 @@
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'Noto Sans KR',system-ui,sans-serif;overflow:hidden}
 button,input,textarea{font-family:inherit}
 .app{height:100vh;padding:40px 40px 40px 48px;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:40px}
-.cal{display:flex;flex-direction:column;gap:20px;min-width:0;min-height:0;padding-top:8px}
-.head{display:flex;align-items:center;justify-content:space-between;gap:24px}
-.title{display:flex;align-items:baseline;gap:16px}
-.title .y,.title .en{font-size:20px;color:var(--muted)}
-.title h1{margin:0;font-size:56px;font-weight:700;line-height:1}
-.nav{display:flex;gap:8px;margin-left:12px;align-self:center}
-.btn-icon{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cal{display:flex;flex-direction:column;gap:16px;min-width:0;min-height:0;padding-top:8px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding-bottom:16px;border-bottom:3px solid var(--navy)}
+.title{display:flex;align-items:flex-end;gap:18px}
+.title h1{margin:0;font-size:72px;font-weight:700;line-height:.9;color:var(--navy)}
+.mlabel{display:flex;flex-direction:column;gap:2px;padding-bottom:2px}
+.mlabel .en{font-size:15px;font-weight:600;color:var(--muted);letter-spacing:2px}
+.mlabel .y{font-size:22px;font-weight:600}
+.nav{display:flex;gap:6px;margin-left:12px;padding-bottom:2px}
+.btn-icon{width:44px;height:44px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .btn-icon:hover,.btn-ghost:hover{border-color:var(--muted)}
-.btn-ghost{height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:15px;cursor:pointer}
-.legend{display:flex;gap:20px;font-size:15px;color:var(--sub)}
+.btn-ghost{height:44px;padding:0 18px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:15px;cursor:pointer}
+.legend{display:flex;gap:20px;font-size:15px;color:var(--sub);padding-bottom:6px}
 .legend span{display:flex;align-items:center;gap:8px}
 .legend .dot{width:4px;height:16px;border-radius:2px;border:none;transform:none}
 .dot{width:10px;height:10px;flex:none;display:inline-block}
@@ -39,27 +41,30 @@ button,input,textarea{font-family:inherit}
 .dot.personal{border-radius:50%;background:var(--personal)}
 .dot.pc{border-radius:2px;border:2px solid var(--pc);background:transparent;box-sizing:border-box}
 .dot.holiday{border-radius:2px;transform:rotate(45deg);background:var(--hol)}
-.legend .dot.school,.legend .dot.personal,.legend .dot.pc,.legend .dot.holiday{width:4px;height:16px;border-radius:2px;border:none;transform:none}
+.legend .dot.school,.legend .dot.personal,.legend .dot.pc{width:4px;height:16px;border-radius:2px;border:none;transform:none}
 .legend .dot.pc{background:var(--pc)}
-.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;font-size:15px;font-weight:600;padding:0 14px;color:var(--sub)}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));font-size:14px;font-weight:700;letter-spacing:1px;color:var(--muted)}
+.week span{padding:0 12px}
 .week span:first-child{color:var(--sun)}
 .week span:last-child{color:var(--sat)}
-.grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
-.cell{background:var(--card);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;overflow:hidden;cursor:pointer;border:2px solid transparent;min-height:0;box-shadow:0 1px 2px rgba(60,50,30,.06)}
-.cell:hover{border-color:var(--line)}
+.grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--grid);border:1px solid var(--grid)}
+.cell{background:var(--card);padding:10px 12px;display:flex;flex-direction:column;gap:5px;overflow:hidden;cursor:pointer;min-height:0}
+.cell:hover{background:#F8FAFC}
 .cell.out{background:var(--card2)}
-.cell.today{background:var(--today);border-color:var(--accent)}
-.cell.sel{border-color:var(--school);box-shadow:0 0 0 4px rgba(47,111,222,.15)}
-.num{font-size:18px;font-weight:600;color:var(--text);height:32px;display:inline-flex;align-items:center;flex:none}
+.cell.today{background:var(--today);box-shadow:inset 0 0 0 3px var(--accent)}
+.cell.sel{background:#F1F6FF;box-shadow:inset 0 0 0 3px var(--school)}
+.dhead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none}
+.today-tag{padding:3px 10px;border-radius:999px;background:var(--navy);color:#FFFFFF;font-size:12px;font-weight:700}
+.num{font-size:18px;font-weight:700;color:var(--text);height:32px;display:inline-flex;align-items:center;flex:none}
 .cell.out .num{color:var(--out)}
 .num.sun,.num.hol{color:var(--sun)}
 .num.sat{color:var(--sat)}
-.cell.today .num{justify-content:center;width:32px;border-radius:50%;background:var(--accent);color:var(--text);font-size:17px;font-weight:700}
-.chip{display:block;font-size:13px;font-weight:500;line-height:1.3;padding:4px 8px;border-radius:3px;border:none;border-left:4px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;width:100%;cursor:pointer;flex:none;font-family:inherit}
+.cell.today .num{justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--text);font-size:18px;font-weight:800}
+.chip{display:block;font-size:13px;font-weight:500;line-height:1.3;padding:3px 8px;border-radius:3px;border:none;border-left:4px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;width:100%;cursor:pointer;flex:none;font-family:inherit}
 .chip.school{background:var(--school-bg);color:var(--school-tx);border-left-color:var(--school)}
 .chip.personal{background:var(--personal-bg);color:var(--personal-tx);border-left-color:var(--personal)}
 .chip.pc{background:var(--pc-bg);color:var(--pc-tx);border-left-color:var(--pc)}
-.chip.holiday{background:var(--hol-bg);color:var(--hol-tx);border-left-color:var(--hol)}
+.chip.holiday{background:transparent;color:var(--hol);border-left:none;padding-left:2px;font-weight:700;cursor:default}
 .more{font-size:12px;color:var(--muted);padding:0 4px;flex:none}
 .side{background:var(--navy);color:var(--p-text);border-radius:22px;padding:32px 28px;display:flex;flex-direction:column;gap:22px;min-height:0}
 .card{display:flex;flex-direction:column;gap:10px;min-height:0}
@@ -160,9 +165,8 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
   <section class="cal" aria-label="월간 달력">
     <div class="head">
       <div class="title">
-        <span class="y" id="hYear"></span>
         <h1 id="hMonth"></h1>
-        <span class="en" id="hEn"></span>
+        <div class="mlabel"><span class="en" id="hEn"></span><span class="y" id="hYear"></span></div>
         <div class="nav">
           <button class="btn-icon" id="prev" aria-label="이전 달">‹</button>
           <button class="btn-icon" id="next" aria-label="다음 달">›</button>
@@ -173,10 +177,10 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
         <span><i class="dot school"></i>학교</span>
         <span><i class="dot personal"></i>개인</span>
         <span><i class="dot pc"></i>PC만</span>
-        <span><i class="dot holiday"></i>공휴일</span>
+        <span style="color:var(--hol);font-weight:600">◆ 공휴일</span>
       </div>
     </div>
-    <div class="week"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+    <div class="week"><span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span></div>
     <div class="grid" id="grid"></div>
   </section>
 
@@ -358,13 +362,13 @@ function lastDay(ev) {
 }
 
 function chipLabel(ev) {
-  return ev.title;
+  return ev.cal === 'holiday' ? '◆ ' + ev.title : ev.title;
 }
 
 function renderHeader() {
-  $('hYear').textContent = state.y;
-  $('hMonth').textContent = (state.m + 1) + '월';
-  $('hEn').textContent = EN_MONTH[state.m];
+  $('hYear').textContent = state.y + '년 ' + (state.m + 1) + '월';
+  $('hMonth').textContent = state.m + 1;
+  $('hEn').textContent = EN_MONTH[state.m].toUpperCase();
 }
 
 function renderGrid() {
@@ -386,7 +390,14 @@ function renderGrid() {
     if (d.getDay() === 0) num.classList.add('sun');
     if (d.getDay() === 6) num.classList.add('sat');
     if (evs.some((e) => e.cal === 'holiday')) num.classList.add('hol');
-    cell.appendChild(num);
+    if (ds === tStr) {
+      const head = el('div', 'dhead');
+      head.appendChild(num);
+      head.appendChild(el('span', 'today-tag', '오늘'));
+      cell.appendChild(head);
+    } else {
+      cell.appendChild(num);
+    }
     evs.slice(0, maxChips).forEach((ev) => {
       cell.appendChild(el('span', 'chip ' + ev.cal, chipLabel(ev, ds)));
     });
