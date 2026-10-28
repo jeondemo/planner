@@ -573,7 +573,7 @@ function renderGrid() {
         hn.title = hols.join(', ');
         head.appendChild(hn);
       }
-      if (ds < tStr && state.memoDays && state.memoDays.has(ds)) head.appendChild(el('span', 'memo-tag', '메모'));
+      if (ds !== tStr && state.memoDays && state.memoDays.has(ds)) head.appendChild(el('span', 'memo-tag', '메모'));
       if (ds === tStr) head.appendChild(el('span', 'today-tag', '오늘'));
       cell.appendChild(head);
       const dayBars = bars.filter((b) => b.c0 <= c && b.c1 >= c);
@@ -824,16 +824,12 @@ function renderSearch() {
 function applyMemo(m) {
   if (!m) return;
   state.memoDays = new Set(m.days || []);
-  if (!state.memoDirty && document.activeElement !== $('memoText')) {
-    $('memoText').value = m.text || '';
-    state.memoStatus = m.savedAt ? '저장됨 · ' + memoStamp(m.savedDate, m.savedAt) : '';
-    $('memoFoot').textContent = state.memoStatus;
-  }
-}
-
-function memoStamp(date, at) {
-  if (!date || date === ymd(todayDate())) return at;
-  return (+date.slice(5, 7)) + '/' + (+date.slice(8, 10)) + ' ' + at;
+  if (state.memoDirty) return;
+  const keep = {};
+  if (m.savedDate && m.text) keep[m.savedDate] = { date: m.savedDate, text: m.text, at: m.savedAt || '' };
+  state.memoRecs = keep;
+  state.memoList = null;
+  if (document.activeElement !== $('memoText')) state.memoDate = '';
 }
 
 function matchLines(text, q) {
@@ -846,25 +842,29 @@ let memoTimer = null;
 
 async function saveMemo() {
   clearTimeout(memoTimer);
+  const date = state.memoDate;
+  if (!date) return;
   const text = $('memoText').value;
-  const date = ymd(todayDate());
   state.memoDirty = false;
   try {
     const r = await api('setMemo', { text: text, date: date }, true);
-    if ($('memoText').value !== text) state.memoDirty = true;
-    state.memoStatus = '저장됨 · ' + r.savedAt;
     const had = state.memoDays && state.memoDays.has(date);
     if (!state.memoDays) state.memoDays = new Set();
     if (text.trim()) state.memoDays.add(date); else state.memoDays.delete(date);
     if (!state.memoRecs) state.memoRecs = {};
     state.memoRecs[date] = text.trim() ? { date: date, text: text, at: r.savedAt } : null;
     state.memoList = null;
+    if (state.memoDate === date) {
+      if ($('memoText').value !== text) state.memoDirty = true;
+      $('memoFoot').textContent = '저장됨 · ' + r.savedAt;
+    }
     if (had !== state.memoDays.has(date)) renderGrid();
   } catch (e) {
-    state.memoDirty = true;
-    state.memoStatus = '저장 실패: ' + e.message;
+    if (state.memoDate === date) {
+      state.memoDirty = true;
+      $('memoFoot').textContent = '저장 실패: ' + e.message;
+    }
   }
-  $('memoFoot').textContent = state.memoStatus;
 }
 
 async function fetchMemoDay(ds) {
@@ -875,25 +875,52 @@ async function fetchMemoDay(ds) {
     const r = await api('getMemoDay', { date: ds });
     state.memoRecs[ds] = r.record || null;
   } catch (e) {
-    state.memoRecs[ds] = { date: ds, text: '불러오기 실패: ' + e.message, at: '' };
+    state.memoRecs[ds] = { date: ds, text: '', at: '', error: e.message };
   }
   state.memoFetching = '';
-  if ((state.sel || ymd(todayDate())) === ds) renderMemoCard(ds);
+  if ((state.sel || ymd(todayDate())) === ds) {
+    if (state.memoDate === ds && !state.memoDirty) state.memoDate = '';
+    renderMemoCard(ds);
+  }
+}
+
+function bindMemo(ds) {
+  if (state.memoDate === ds) return;
+  if (state.memoDirty && state.memoDate) saveMemo();
+  state.memoDirty = false;
+  const ta = $('memoText');
+  const rec = state.memoRecs ? state.memoRecs[ds] : undefined;
+  if (rec === undefined && state.memoDays && state.memoDays.has(ds)) {
+    ta.value = '';
+    ta.readOnly = true;
+    ta.placeholder = '불러오는 중…';
+    $('memoFoot').textContent = '';
+    fetchMemoDay(ds);
+    return;
+  }
+  state.memoDate = ds;
+  ta.readOnly = false;
+  ta.placeholder = '이 날 메모를 쓰세요 (자동 저장)';
+  ta.value = rec && rec.text ? rec.text : '';
+  $('memoFoot').textContent = rec && rec.error ? '불러오기 실패: ' + rec.error : rec && rec.at ? '저장됨 · ' + rec.at : '';
 }
 
 function renderMemoCard(ds) {
-  const past = ds < ymd(todayDate());
+  const ts = ymd(todayDate());
+  const past = ds < ts;
   document.body.classList.toggle('pastday', past);
   $('memoCard').classList.toggle('past', past);
   $('memoText').style.display = past ? 'none' : '';
   $('memoView').style.display = past ? '' : 'none';
   $('memoBadge').style.display = past ? '' : 'none';
+  const d = parseYmd(ds);
   if (!past) {
-    $('memoTitle').textContent = '✎ 메모';
-    $('memoFoot').textContent = state.memoStatus || '';
+    $('memoTitle').textContent = ds === ts ? '✎ 오늘 메모' : '✎ ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 메모';
+    bindMemo(ds);
     return;
   }
-  const d = parseYmd(ds);
+  if (state.memoDirty && state.memoDate) saveMemo();
+  state.memoDate = '';
   $('memoTitle').textContent = (d.getMonth() + 1) + '월 ' + d.getDate() + '일 메모 기록';
   const rec = state.memoRecs ? state.memoRecs[ds] : undefined;
   if (rec === undefined && state.memoDays && state.memoDays.has(ds)) {
@@ -902,8 +929,8 @@ function renderMemoCard(ds) {
     fetchMemoDay(ds);
     return;
   }
-  if (!rec) {
-    $('memoView').textContent = '이 날은 메모 기록이 없습니다';
+  if (!rec || !rec.text) {
+    $('memoView').textContent = rec && rec.error ? '불러오기 실패: ' + rec.error : '이 날은 메모 기록이 없습니다';
     $('memoFoot').textContent = '';
     return;
   }
