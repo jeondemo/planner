@@ -53,12 +53,15 @@ button,input,textarea{font-family:inherit}
 .cell.out{background:var(--card2)}
 .cell.today{background:var(--today);box-shadow:inset 0 0 0 3px var(--accent)}
 .cell.sel{background:#F1F6FF;box-shadow:inset 0 0 0 3px var(--school)}
-.dhead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none}
-.today-tag{padding:3px 10px;border-radius:999px;background:var(--navy);color:#FFFFFF;font-size:12px;font-weight:700}
+.dhead{display:flex;align-items:center;gap:8px;flex:none;min-width:0}
+.hol-name{font-size:13px;font-weight:600;color:var(--hol);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cell.out .hol-name{color:#D98B88}
+.today-tag{margin-left:auto;flex:none;padding:3px 10px;border-radius:999px;background:var(--navy);color:#FFFFFF;font-size:12px;font-weight:700}
 .num{font-size:18px;font-weight:700;color:var(--text);height:32px;display:inline-flex;align-items:center;flex:none}
 .cell.out .num{color:var(--out)}
 .num.sun,.num.hol{color:var(--sun)}
 .num.sat{color:var(--sat)}
+.num.sat.hol{color:var(--sun)}
 .cell.today .num{justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--accent);color:var(--text);font-size:18px;font-weight:800}
 .chip{display:block;font-size:13px;font-weight:500;height:23px;line-height:17px;padding:3px 8px;border-radius:3px;border:none;border-left:4px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;width:100%;cursor:pointer;flex:none;font-family:inherit}
 .chip.school{background:var(--school-bg);color:var(--school-tx);border-left-color:var(--school)}
@@ -252,7 +255,7 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
         <span><i class="dot school"></i>학교</span>
         <span><i class="dot personal"></i>개인</span>
         <span><i class="dot pc"></i>PC만</span>
-        <span style="color:var(--hol);font-weight:600">◆ 공휴일</span>
+        <span style="color:var(--hol);font-weight:600">공휴일</span>
       </div>
     </div>
     <div class="week"><span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span></div>
@@ -460,7 +463,7 @@ function lastDay(ev) {
 }
 
 function chipLabel(ev) {
-  return ev.cal === 'holiday' ? '◆ ' + ev.title : ev.title;
+  return ev.title;
 }
 
 function renderHeader() {
@@ -513,19 +516,21 @@ function renderGrid() {
       if (ds === tStr) cell.classList.add('today');
       if (state.sel && ds === state.sel && ds !== tStr) cell.classList.add('sel');
       const evs = eventsOn(ds);
-      const singles = evs.filter((e) => !isMulti(e));
+      const singles = evs.filter((e) => !isMulti(e) && e.cal !== 'holiday');
+      const hols = evs.filter((e) => e.cal === 'holiday').map((e) => e.title);
       const num = el('span', 'num', d.getDate());
       if (d.getDay() === 0) num.classList.add('sun');
       if (d.getDay() === 6) num.classList.add('sat');
       if (evs.some((e) => e.cal === 'holiday')) num.classList.add('hol');
-      if (ds === tStr) {
-        const head = el('div', 'dhead');
-        head.appendChild(num);
-        head.appendChild(el('span', 'today-tag', '오늘'));
-        cell.appendChild(head);
-      } else {
-        cell.appendChild(num);
+      const head = el('div', 'dhead');
+      head.appendChild(num);
+      if (hols.length) {
+        const hn = el('span', 'hol-name', hols.join(', '));
+        hn.title = hols.join(', ');
+        head.appendChild(hn);
       }
+      if (ds === tStr) head.appendChild(el('span', 'today-tag', '오늘'));
+      cell.appendChild(head);
       const dayBars = bars.filter((b) => b.c0 <= c && b.c1 >= c);
       const shownLanes = dayBars.filter((b) => b.lane < maxChips).reduce((m, b) => Math.max(m, b.lane + 1), 0);
       const hiddenBars = dayBars.filter((b) => b.lane >= maxChips).length;
