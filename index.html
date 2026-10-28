@@ -148,7 +148,7 @@ button.ev-item:hover{background:rgba(255,255,255,.13)}
 .foot button{margin-left:auto;height:32px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:transparent;color:var(--p-text);font-size:13px;cursor:pointer}
 .backdrop{position:fixed;inset:0;background:rgba(30,38,50,.45);display:none;align-items:center;justify-content:center;z-index:10}
 .backdrop.open{display:flex}
-.dialog{width:480px;max-width:calc(100vw - 32px);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:20px;color:var(--text);box-shadow:0 20px 50px rgba(30,38,50,.25)}
+.dialog{width:500px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow-y:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px 28px;display:flex;flex-direction:column;gap:16px;color:var(--text);box-shadow:0 20px 50px rgba(30,38,50,.25)}
 .dlg-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .dlg-head .k{font-size:14px;color:var(--muted)}
 .dlg-head h2{margin:2px 0 0;font-size:22px;font-weight:700}
@@ -187,6 +187,37 @@ body.popup .backdrop{background:var(--card)}
 body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-radius:0;overflow-y:auto;box-shadow:none}
 .done-screen{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--card);font-size:18px}
 .done-screen span{font-size:14px;color:var(--muted)}
+.range-btns{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px}
+.range-btns .tilde{color:var(--muted)}
+.date-btn{height:50px;border-radius:10px;border:1px solid var(--line);background:#FBFAF6;color:var(--text);font-size:15px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.25;font-family:inherit}
+.date-btn .lbl{font-size:11px;font-weight:500;color:var(--muted)}
+.date-btn.on{border:2px solid var(--school);background:var(--school-bg)}
+.date-btn.on .lbl{color:var(--school);font-weight:700}
+.quick{display:flex;gap:6px;flex-wrap:wrap}
+.quick button{height:30px;padding:0 12px;border-radius:15px;border:1px solid var(--line);background:#FFFFFF;color:var(--text);font-size:13px;cursor:pointer;font-family:inherit}
+.quick button:hover{border-color:var(--muted)}
+.quick button.on{background:var(--navy);border-color:var(--navy);color:#FFFFFF;font-weight:600}
+.mini{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.mini-head{display:flex;align-items:center;justify-content:space-between}
+.mini-head span{font-size:15px;font-weight:700}
+.mini-head button{width:32px;height:32px;border-radius:16px;border:1px solid var(--line);background:#FFFFFF;color:var(--text);font-size:16px;cursor:pointer}
+.mini-week,.mini-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));text-align:center}
+.mini-week{font-size:12px;font-weight:700;color:var(--muted)}
+.mini-week span:first-child{color:var(--sun)}
+.mini-week span:last-child{color:var(--sat)}
+.mini-grid{row-gap:2px}
+.mini-day{height:30px;border:none;background:transparent;color:var(--text);font-size:14px;font-weight:500;cursor:pointer;border-radius:8px;font-family:inherit;padding:0}
+.mini-day:hover{background:#EEF1F4}
+.mini-day.sun,.mini-day.hol{color:var(--sun)}
+.mini-day.sat{color:var(--sat)}
+.mini-day.out{color:#B4BCC5}
+.mini-day.tdy{box-shadow:inset 0 0 0 2px var(--accent)}
+.mini-day.mid{background:var(--school-bg);border-radius:0}
+.mini-day.edge{background:var(--navy);color:#FFFFFF;font-weight:700;border-radius:0}
+.mini-day.edge.s{border-radius:15px 0 0 15px}
+.mini-day.edge.e{border-radius:0 15px 15px 0}
+.mini-day.edge.s.e{border-radius:15px}
+.mini-day:disabled,.date-btn:disabled,.quick button:disabled{cursor:default;opacity:.6}
 </style>
 </head>
 <body>
@@ -272,17 +303,29 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
     </div>
     <div class="field">
       <div class="timehead"><span class="lb" style="font-size:14px;color:var(--sub)">기간</span><span id="fDays" style="font-size:13px;font-weight:600;color:#B36A00"></span></div>
-      <div class="times">
-        <label class="sr" for="fDate">시작일</label>
-        <input class="inp" type="date" id="fDate">
-        <span style="color:var(--muted)">~</span>
-        <label class="sr" for="fEndDate">종료일</label>
-        <input class="inp" type="date" id="fEndDate">
+      <input type="hidden" id="fDate">
+      <input type="hidden" id="fEndDate">
+      <div class="range-btns">
+        <button type="button" class="date-btn" id="pickStart"><span class="lbl" id="pickStartLbl">시작</span><span id="pickStartVal"></span></button>
+        <span class="tilde">~</span>
+        <button type="button" class="date-btn" id="pickEnd"><span class="lbl" id="pickEndLbl">끝</span><span id="pickEndVal"></span></button>
+      </div>
+      <div class="quick" id="quickDays">
+        <button type="button" data-days="1">하루</button>
+        <button type="button" data-days="2">2일</button>
+        <button type="button" data-days="3">3일</button>
+        <button type="button" data-days="5">5일</button>
+        <button type="button" data-days="7">1주</button>
+      </div>
+      <div class="mini">
+        <div class="mini-head"><button type="button" id="miniPrev" aria-label="이전 달">‹</button><span id="miniTitle"></span><button type="button" id="miniNext" aria-label="다음 달">›</button></div>
+        <div class="mini-week"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+        <div class="mini-grid" id="miniGrid"></div>
       </div>
     </div>
     <div class="field">
       <label class="lb" for="fMemo">메모 (선택)</label>
-      <textarea class="inp" id="fMemo" rows="3" placeholder="장소나 준비물 등을 적어두세요"></textarea>
+      <textarea class="inp" id="fMemo" rows="2" placeholder="장소나 준비물 등을 적어두세요"></textarea>
     </div>
     <div class="info" id="dlgInfo"></div>
     <p class="msg" id="dlgMsg" role="alert"></p>
@@ -767,6 +810,109 @@ function updateDays(fromStart) {
   $('fDays').textContent = n > 1 ? n + '일간' : '';
 }
 
+function fmtPick(ds) {
+  const d = parseYmd(ds);
+  return (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + WEEK[d.getDay()] + ')';
+}
+
+function startPicker(readOnly) {
+  const d = parseYmd($('fDate').value || ymd(todayDate()));
+  state.pick = { target: 'end', y: d.getFullYear(), m: d.getMonth(), ro: !!readOnly };
+  renderPicker();
+}
+
+function renderPicker() {
+  const p = state.pick;
+  if (!p) return;
+  const s = $('fDate').value;
+  const e = $('fEndDate').value || s;
+  $('pickStartVal').textContent = s ? fmtPick(s) : '';
+  $('pickEndVal').textContent = e ? fmtPick(e) : '';
+  $('pickStart').classList.toggle('on', !p.ro && p.target === 'start');
+  $('pickEnd').classList.toggle('on', !p.ro && p.target === 'end');
+  $('pickStartLbl').textContent = !p.ro && p.target === 'start' ? '시작 · 날짜를 고르세요' : '시작';
+  $('pickEndLbl').textContent = !p.ro && p.target === 'end' ? '끝 · 날짜를 고르세요' : '끝';
+  const n = s && e ? Math.round((parseYmd(e) - parseYmd(s)) / 86400000) + 1 : 0;
+  document.querySelectorAll('#quickDays button').forEach((b) => {
+    b.classList.toggle('on', +b.dataset.days === n);
+    b.disabled = p.ro;
+  });
+  ['pickStart', 'pickEnd', 'miniPrev', 'miniNext'].forEach((id) => { $(id).disabled = p.ro; });
+  $('miniTitle').textContent = p.y + '년 ' + (p.m + 1) + '월';
+  const grid = $('miniGrid');
+  grid.replaceChildren();
+  const first = new Date(p.y, p.m, 1);
+  const start = addDays(first, -first.getDay());
+  const tStr = ymd(todayDate());
+  for (let i = 0; i < 42; i++) {
+    const d = addDays(start, i);
+    const ds = ymd(d);
+    const b = el('button', 'mini-day', d.getDate());
+    b.type = 'button';
+    if (d.getMonth() !== p.m) b.classList.add('out');
+    if (d.getDay() === 0) b.classList.add('sun');
+    if (d.getDay() === 6) b.classList.add('sat');
+    if (state.events.some((ev) => ev.cal === 'holiday' && ev.start.slice(0, 10) === ds)) b.classList.add('hol');
+    if (ds === tStr) b.classList.add('tdy');
+    if (s && e) {
+      if (ds === s) b.classList.add('edge', 's');
+      if (ds === e) b.classList.add('edge', 'e');
+      if (ds > s && ds < e) b.classList.add('mid');
+    }
+    b.setAttribute('aria-label', fmtPick(ds));
+    b.disabled = p.ro;
+    b.addEventListener('click', () => pickDate(ds));
+    grid.appendChild(b);
+  }
+}
+
+function pickDate(ds) {
+  const p = state.pick;
+  if (!p || p.ro) return;
+  const s = $('fDate').value;
+  const e = $('fEndDate').value || s;
+  if (p.target === 'start') {
+    $('fDate').value = ds;
+    if (e < ds || !state.modal.endTouched) $('fEndDate').value = ds;
+    p.target = 'end';
+  } else {
+    if (ds < s) { $('fDate').value = ds; $('fEndDate').value = ds; }
+    else $('fEndDate').value = ds;
+    state.modal.endTouched = true;
+  }
+  updateDays(false);
+  renderPicker();
+}
+
+function quickDays(n) {
+  if (!state.pick || state.pick.ro) return;
+  const s = $('fDate').value;
+  if (!s) return;
+  $('fEndDate').value = ymd(addDays(parseYmd(s), n - 1));
+  state.modal.endTouched = true;
+  state.pick.target = 'end';
+  updateDays(false);
+  renderPicker();
+}
+
+function setPickTarget(t) {
+  if (!state.pick || state.pick.ro) return;
+  state.pick.target = t;
+  const d = parseYmd((t === 'start' ? $('fDate').value : $('fEndDate').value) || $('fDate').value || ymd(todayDate()));
+  state.pick.y = d.getFullYear();
+  state.pick.m = d.getMonth();
+  renderPicker();
+}
+
+function movePickMonth(dir) {
+  const p = state.pick;
+  if (!p) return;
+  p.m += dir;
+  if (p.m < 0) { p.m = 11; p.y--; }
+  if (p.m > 11) { p.m = 0; p.y++; }
+  renderPicker();
+}
+
 function openModal(kind, title, data, readOnly) {
   state.modal = data;
   $('dlgKind').textContent = kind;
@@ -778,6 +924,7 @@ function openModal(kind, title, data, readOnly) {
   $('fEndDate').value = data.endDate;
   $('fMemo').value = data.memo;
   updateDays(false);
+  startPicker(readOnly);
   $('dlgMsg').textContent = '';
   const del = $('dlgDelete');
   del.style.visibility = data.id && !readOnly ? 'visible' : 'hidden';
@@ -949,6 +1096,11 @@ document.addEventListener('pointerdown', () => { state.selAt = Date.now(); });
 $('fDate').addEventListener('change', () => updateDays(true));
 document.querySelectorAll('input[name="fCal"]').forEach((r) => r.addEventListener('change', updateCalHint));
 $('fEndDate').addEventListener('change', () => { if (state.modal) state.modal.endTouched = true; updateDays(false); });
+$('pickStart').addEventListener('click', () => setPickTarget('start'));
+$('pickEnd').addEventListener('click', () => setPickTarget('end'));
+$('miniPrev').addEventListener('click', () => movePickMonth(-1));
+$('miniNext').addEventListener('click', () => movePickMonth(1));
+document.querySelectorAll('#quickDays button').forEach((b) => b.addEventListener('click', () => quickDays(+b.dataset.days)));
 $('dlgClose').addEventListener('click', closeModal);
 $('dlgCancel').addEventListener('click', closeModal);
 $('dlgSave').addEventListener('click', saveModal);
