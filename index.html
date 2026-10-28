@@ -100,6 +100,31 @@ mark.hl{background:#FFE08A;color:inherit;padding:0 1px;border-radius:2px}
 .res-date{width:52px;font-size:13px;color:var(--p-sub);flex:none}
 body.searching .todos,body.searching .dday{display:none}
 body.searching .day-card{flex:1 1 auto}
+body.searching .memo{display:none}
+body.pastday .todos{display:none}
+body.memoview .todos,body.memoview .dday,body.memoview .memo{display:none}
+body.memoview .day-card{flex:1 1 auto}
+.memo{flex:1 1 auto;min-height:130px;display:flex;flex-direction:column;gap:8px;padding:12px 14px 10px;border-radius:14px;background:#FFF6D8;color:#3B2F12;box-shadow:inset 0 0 0 2px var(--gold)}
+.memo.past{background:#EFE7CC;box-shadow:inset 0 0 0 2px #C9B57A}
+.memo-head{display:flex;align-items:center;gap:6px;flex:none;min-width:0}
+.memo-title{font-size:14px;font-weight:700;margin-right:auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.memo-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#3B2F12;color:#FFF6D8;flex:none}
+.memo-btn{height:28px;padding:0 10px;border-radius:14px;border:1px solid #C9B57A;background:#FFFFFF;color:#3B2F12;font-size:12px;font-weight:600;cursor:pointer;flex:none;font-family:inherit}
+.memo-btn:hover{border-color:#3B2F12}
+.memo-text{flex:1;min-height:0;width:100%;resize:none;border:none;outline:none;background:repeating-linear-gradient(to bottom,transparent 0,transparent 25px,rgba(180,150,70,.25) 25px,rgba(180,150,70,.25) 26px);background-attachment:local;line-height:26px;padding:0;color:#3B2F12;font-size:15px;font-family:inherit;overflow-y:auto}
+.memo-text::placeholder{color:#9A8955}
+.memo-view{white-space:pre-line;overflow-wrap:anywhere}
+.memo-foot{font-size:11px;color:#6B5B30;text-align:right;flex:none;min-height:14px}
+.memo-tag{font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px;background:#FFF0C2;color:#7A5A00;flex:none}
+.memo-find{position:relative;flex:none}
+.memo-find input{width:100%;height:42px;padding:0 14px 0 38px;border-radius:10px;border:2px solid var(--gold);background:rgba(255,255,255,.08);color:#FFFFFF;font-size:15px;font-family:inherit}
+.memo-find input::placeholder{color:var(--p-muted)}
+.memo-find input:focus{outline:none;background:rgba(255,255,255,.12)}
+.memo-find svg{position:absolute;left:13px;top:13px;pointer-events:none}
+.ev-item.memo-rec{border-left-color:var(--gold);flex-direction:column;align-items:stretch;gap:4px}
+.ev-item.memo-res{border-left-color:var(--gold)}
+.memo-rec-date{font-size:13px;color:var(--p-sub)}
+.memo-rec-text{font-size:14px;line-height:1.5;white-space:pre-line;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
 .btn-reorder{height:32px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:transparent;color:var(--p-text);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;flex:none}
 .btn-reorder:hover{border-color:var(--p-text)}
 .btn-reorder.on{background:var(--gold);border-color:var(--gold);color:var(--text);font-weight:700}
@@ -274,7 +299,13 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
           <button class="btn-reorder" id="dayReorder" style="display:none"></button>
           <button class="btn-back" id="dayBack" style="display:none">오늘로</button>
           <button class="btn-back" id="searchClose" style="display:none">닫기</button>
+          <button class="btn-back" id="memoClose" style="display:none">닫기</button>
         </div>
+      </div>
+      <div class="memo-find" id="memoFindWrap" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F2B84B" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <label class="sr" for="memoFindInput">메모 찾기</label>
+        <input id="memoFindInput" placeholder="찾을 단어 (예: 컨설팅)" maxlength="50" autocomplete="off">
       </div>
       <div class="search-tools" id="searchTools" style="display:none">
         <button class="range-chip" data-range="3y">최근 3년</button>
@@ -290,6 +321,18 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
       <input class="todo-add" id="todoAdd" placeholder="+ 할 일 추가 (Enter)" maxlength="100" autocomplete="off">
     </div>
     <div class="card dday" id="dday"></div>
+    <div class="memo" id="memoCard">
+      <div class="memo-head">
+        <span class="memo-title" id="memoTitle">✎ 메모</span>
+        <span class="memo-badge" id="memoBadge" style="display:none">보기 전용</span>
+        <button class="memo-btn" id="memoListBtn" type="button">지난 메모</button>
+        <button class="memo-btn" id="memoFindBtn" type="button">메모 찾기</button>
+      </div>
+      <label class="sr" for="memoText">메모</label>
+      <textarea class="memo-text" id="memoText" maxlength="2000" placeholder="급하게 적어둘 내용을 쓰세요 (자동 저장)"></textarea>
+      <div class="memo-text memo-view" id="memoView" style="display:none"></div>
+      <span class="memo-foot" id="memoFoot"></span>
+    </div>
     <div class="foot" id="foot"><i class="dot"></i><span id="footText">불러오는 중…</span><button id="refresh">새로고침</button></div>
   </aside>
 </div>
@@ -426,7 +469,8 @@ async function load() {
   const ddEnd = addDays(t, 150);
   const to = g.end > ddEnd ? g.end : ddEnd;
   try {
-    const results = await Promise.all([api('list', { start: ymd(from), end: ymd(to) }), api('getTodos'), api('getOrder')]);
+    const results = await Promise.all([api('list', { start: ymd(from), end: ymd(to) }), api('getTodos'), api('getOrder'), api('getMemo')]);
+    applyMemo(results[3].memo);
     state.events = results[0].events;
     state.synced = results[0].syncedAt;
     state.todos = results[1].todos;
@@ -529,6 +573,7 @@ function renderGrid() {
         hn.title = hols.join(', ');
         head.appendChild(hn);
       }
+      if (ds < tStr && state.memoDays && state.memoDays.has(ds)) head.appendChild(el('span', 'memo-tag', '메모'));
       if (ds === tStr) head.appendChild(el('span', 'today-tag', '오늘'));
       cell.appendChild(head);
       const dayBars = bars.filter((b) => b.c0 <= c && b.c1 >= c);
@@ -568,6 +613,7 @@ function renderGrid() {
 
 function selectDay(ds) {
   if (state.search) clearSearchUI();
+  if (state.memoMode) clearMemoMode();
   state.reorder = false;
   state.moved = '';
   state.sel = ds === ymd(todayDate()) ? '' : ds;
@@ -594,9 +640,13 @@ function renderDay() {
   $('today').textContent = t.getFullYear() + '년 ' + (t.getMonth() + 1) + '월 ' + t.getDate() + '일 ' + WEEK[t.getDay()] + '요일';
   $('searchTools').style.display = state.search ? '' : 'none';
   $('searchClose').style.display = state.search ? '' : 'none';
+  $('memoClose').style.display = state.memoMode ? '' : 'none';
+  $('memoFindWrap').style.display = state.memoMode === 'find' ? '' : 'none';
   if (state.search) { renderSearch(); return; }
+  if (state.memoMode) { renderMemoPanel(); return; }
   const ds = state.sel || ts;
   const isToday = ds === ts;
+  renderMemoCard(ds);
   $('dayCard').classList.toggle('sel', !isToday);
   $('dayRel').textContent = isToday ? '' : relLabel(ds);
   $('dayTitle').textContent = (isToday ? '오늘 일정' : korDate(parseYmd(ds)) + ' 일정') + (state.reorder ? ' · 순서 바꾸는 중' : '');
@@ -688,6 +738,7 @@ async function runSearch(range) {
     const res = await api('search', { q: q, range: r });
     if (tok !== state.searchTok || !state.search) return;
     state.search.results = res.events || [];
+    state.search.memos = res.memos || [];
   } catch (e) {
     if (tok !== state.searchTok || !state.search) return;
     state.search.error = e.message;
@@ -711,7 +762,8 @@ function jumpTo(ds) {
 function renderSearch() {
   const sr = state.search;
   $('dayCard').classList.add('sel');
-  $('dayRel').textContent = sr.loading ? '검색 중…' : '검색 결과 ' + sr.results.length + '건';
+  const memos = sr.memos || [];
+  $('dayRel').textContent = sr.loading ? '검색 중…' : '검색 결과 ' + (sr.results.length + memos.length) + '건';
   $('dayTitle').textContent = '"' + sr.q + '"';
   $('dayBack').style.display = 'none';
   $('dayReorder').style.display = 'none';
@@ -721,18 +773,36 @@ function renderSearch() {
   list.replaceChildren();
   if (sr.error) { list.appendChild(el('span', 'empty', '검색 실패: ' + sr.error)); return; }
   if (sr.loading) return;
-  if (!sr.results.length) {
+  if (!sr.results.length && !memos.length) {
     list.appendChild(el('span', 'empty', sr.range === '3y' ? '최근 3년 안에 결과가 없습니다. 전체(10년)로 넓혀보세요.' : '결과가 없습니다.'));
     return;
   }
+  const all = sr.results.map((ev) => ({ d: ev.start.slice(0, 10), ev: ev }))
+    .concat(memos.map((m) => ({ d: m.date, memo: m })))
+    .sort((a, b) => (a.d < b.d ? 1 : a.d > b.d ? -1 : 0));
   let cur = '';
-  sr.results.forEach((ev) => {
-    const d = ev.start.slice(0, 10);
+  all.forEach((row) => {
+    const d = row.d;
     const ym = d.slice(0, 7);
     if (ym !== cur) {
       cur = ym;
       list.appendChild(el('span', 'grp-label', (+d.slice(0, 4)) + '년 ' + (+d.slice(5, 7)) + '월'));
     }
+    if (row.memo) {
+      const mi = el('button', 'ev-item res memo-res' + (state.sel === d ? ' cur' : ''));
+      mi.type = 'button';
+      mi.appendChild(el('span', 'res-date', d.slice(8, 10) + ' (' + WEEK[parseYmd(d).getDay()] + ')'));
+      const mb = el('span', 'ev-body');
+      mb.appendChild(el('span', 'ev-title', '메모 기록'));
+      const ms = el('span', 'ev-sub');
+      appendHL(ms, matchLines(row.memo.text, sr.q), sr.q);
+      mb.appendChild(ms);
+      mi.appendChild(mb);
+      mi.addEventListener('click', () => jumpTo(d));
+      list.appendChild(mi);
+      return;
+    }
+    const ev = row.ev;
     const item = el('button', 'ev-item res ' + ev.cal + (state.sel === d ? ' cur' : ''));
     item.type = 'button';
     item.appendChild(el('span', 'res-date', d.slice(8, 10) + ' (' + WEEK[parseYmd(d).getDay()] + ')'));
@@ -748,6 +818,172 @@ function renderSearch() {
     }
     item.appendChild(body);
     item.addEventListener('click', () => jumpTo(d));
+    list.appendChild(item);
+  });
+}
+
+function applyMemo(m) {
+  if (!m) return;
+  state.memoDays = new Set(m.days || []);
+  if (!state.memoDirty && document.activeElement !== $('memoText')) {
+    $('memoText').value = m.text || '';
+    state.memoStatus = m.savedAt ? '저장됨 · ' + memoStamp(m.savedDate, m.savedAt) : '';
+    $('memoFoot').textContent = state.memoStatus;
+  }
+}
+
+function memoStamp(date, at) {
+  if (!date || date === ymd(todayDate())) return at;
+  return (+date.slice(5, 7)) + '/' + (+date.slice(8, 10)) + ' ' + at;
+}
+
+function matchLines(text, q) {
+  const lq = q.toLowerCase();
+  const lines = text.split('\n').filter((l) => l.toLowerCase().indexOf(lq) !== -1);
+  return lines.length ? lines.join('\n') : text.slice(0, 80);
+}
+
+let memoTimer = null;
+
+async function saveMemo() {
+  clearTimeout(memoTimer);
+  const text = $('memoText').value;
+  const date = ymd(todayDate());
+  state.memoDirty = false;
+  try {
+    const r = await api('setMemo', { text: text, date: date }, true);
+    if ($('memoText').value !== text) state.memoDirty = true;
+    state.memoStatus = '저장됨 · ' + r.savedAt;
+    const had = state.memoDays && state.memoDays.has(date);
+    if (!state.memoDays) state.memoDays = new Set();
+    if (text.trim()) state.memoDays.add(date); else state.memoDays.delete(date);
+    if (!state.memoRecs) state.memoRecs = {};
+    state.memoRecs[date] = text.trim() ? { date: date, text: text, at: r.savedAt } : null;
+    state.memoList = null;
+    if (had !== state.memoDays.has(date)) renderGrid();
+  } catch (e) {
+    state.memoDirty = true;
+    state.memoStatus = '저장 실패: ' + e.message;
+  }
+  $('memoFoot').textContent = state.memoStatus;
+}
+
+async function fetchMemoDay(ds) {
+  if (!state.memoRecs) state.memoRecs = {};
+  if (state.memoFetching === ds) return;
+  state.memoFetching = ds;
+  try {
+    const r = await api('getMemoDay', { date: ds });
+    state.memoRecs[ds] = r.record || null;
+  } catch (e) {
+    state.memoRecs[ds] = { date: ds, text: '불러오기 실패: ' + e.message, at: '' };
+  }
+  state.memoFetching = '';
+  if ((state.sel || ymd(todayDate())) === ds) renderMemoCard(ds);
+}
+
+function renderMemoCard(ds) {
+  const past = ds < ymd(todayDate());
+  document.body.classList.toggle('pastday', past);
+  $('memoCard').classList.toggle('past', past);
+  $('memoText').style.display = past ? 'none' : '';
+  $('memoView').style.display = past ? '' : 'none';
+  $('memoBadge').style.display = past ? '' : 'none';
+  if (!past) {
+    $('memoTitle').textContent = '✎ 메모';
+    $('memoFoot').textContent = state.memoStatus || '';
+    return;
+  }
+  const d = parseYmd(ds);
+  $('memoTitle').textContent = (d.getMonth() + 1) + '월 ' + d.getDate() + '일 메모 기록';
+  const rec = state.memoRecs ? state.memoRecs[ds] : undefined;
+  if (rec === undefined && state.memoDays && state.memoDays.has(ds)) {
+    $('memoView').textContent = '불러오는 중…';
+    $('memoFoot').textContent = '';
+    fetchMemoDay(ds);
+    return;
+  }
+  if (!rec) {
+    $('memoView').textContent = '이 날은 메모 기록이 없습니다';
+    $('memoFoot').textContent = '';
+    return;
+  }
+  $('memoView').textContent = rec.text;
+  $('memoFoot').textContent = '그날 마지막으로 저장된 내용 · ' + rec.at + ' 저장';
+}
+
+function clearMemoMode() {
+  state.memoMode = null;
+  document.body.classList.remove('memoview');
+}
+
+function closeMemoMode() {
+  clearMemoMode();
+  renderDay();
+}
+
+async function openMemoMode(mode) {
+  if (state.memoDirty) saveMemo();
+  if (state.search) clearSearchUI();
+  state.reorder = false;
+  state.memoMode = mode;
+  state.selAt = Date.now();
+  document.body.classList.add('memoview');
+  if (mode === 'find') $('memoFindInput').value = state.memoQ || '';
+  renderDay();
+  if (mode === 'find') focusSoon($('memoFindInput'));
+  if (!state.memoList) {
+    state.memoListError = '';
+    try {
+      const r = await api('memoList');
+      state.memoList = r.records || [];
+      if (!state.memoRecs) state.memoRecs = {};
+      state.memoList.forEach((x) => { state.memoRecs[x.date] = x; });
+    } catch (e) {
+      state.memoListError = e.message;
+    }
+    if (state.memoMode) renderDay();
+  }
+}
+
+function renderMemoPanel() {
+  const mode = state.memoMode;
+  $('dayCard').classList.add('sel');
+  document.body.classList.remove('pastday');
+  $('dayBack').style.display = 'none';
+  $('dayReorder').style.display = 'none';
+  $('dayAdd').style.display = 'none';
+  $('dayTitle').textContent = mode === 'find' ? '메모 찾기' : '지난 메모';
+  const list = $('todayList');
+  list.replaceChildren();
+  if (state.memoListError) { $('dayRel').textContent = ''; list.appendChild(el('span', 'empty', '불러오기 실패: ' + state.memoListError)); return; }
+  if (!state.memoList) { $('dayRel').textContent = '불러오는 중…'; return; }
+  const q = mode === 'find' ? (state.memoQ || '').trim() : '';
+  let items = state.memoList;
+  if (mode === 'find') {
+    items = q ? items.filter((r) => r.text.toLowerCase().indexOf(q.toLowerCase()) !== -1) : [];
+    $('dayRel').textContent = q ? '메모 검색 ' + items.length + '건' : '찾을 단어를 입력하세요';
+    if (q && !items.length) list.appendChild(el('span', 'empty', '"' + q + '"가 들어간 메모가 없습니다'));
+  } else {
+    $('dayRel').textContent = '기록 ' + items.length + '일';
+    if (!items.length) list.appendChild(el('span', 'empty', '아직 메모 기록이 없습니다'));
+  }
+  let cur = '';
+  items.forEach((r) => {
+    const ym = r.date.slice(0, 7);
+    if (ym !== cur) {
+      cur = ym;
+      list.appendChild(el('span', 'grp-label', (+r.date.slice(0, 4)) + '년 ' + (+r.date.slice(5, 7)) + '월'));
+    }
+    const item = el('button', 'ev-item memo-rec');
+    item.type = 'button';
+    const d = parseYmd(r.date);
+    item.appendChild(el('span', 'memo-rec-date', d.getDate() + '일 (' + WEEK[d.getDay()] + ')' + (r.at ? ' · ' + r.at : '')));
+    const t = el('span', 'memo-rec-text');
+    if (q) appendHL(t, matchLines(r.text, q), q);
+    else t.textContent = r.text;
+    item.appendChild(t);
+    item.addEventListener('click', () => { clearMemoMode(); jumpTo(r.date); });
     list.appendChild(item);
   });
 }
@@ -1115,11 +1351,13 @@ function tick() {
   const k = ymd(d);
   if (state.dayKey && state.dayKey !== k) { state.y = d.getFullYear(); state.m = d.getMonth(); state.sel = ''; load(); }
   state.dayKey = k;
-  if ((state.sel || state.reorder || state.search) && !state.modal && document.activeElement !== $('searchInput') && Date.now() - state.selAt > SEL_RESET_MS) {
+  const typing = [$('searchInput'), $('memoFindInput')].indexOf(document.activeElement) !== -1;
+  if ((state.sel || state.reorder || state.search || state.memoMode) && !state.modal && !typing && Date.now() - state.selAt > SEL_RESET_MS) {
     state.sel = '';
     state.reorder = false;
     state.moved = '';
     if (state.search) clearSearchUI();
+    if (state.memoMode) clearMemoMode();
     const t = todayDate();
     if (state.y !== t.getFullYear() || state.m !== t.getMonth()) { state.y = t.getFullYear(); state.m = t.getMonth(); render(); load(); }
     else { renderGrid(); renderDay(); }
@@ -1134,7 +1372,7 @@ function focusSoon(input) {
     input.focus();
   }, ms));
 }
-['fTitle', 'fMemo', 'todoAdd', 'keyInput', 'searchInput'].forEach((id) => {
+['fTitle', 'fMemo', 'todoAdd', 'keyInput', 'searchInput', 'memoText', 'memoFindInput'].forEach((id) => {
   $(id).addEventListener('pointerdown', () => focusSoon($(id)));
 });
 
@@ -1149,6 +1387,25 @@ $('searchInput').addEventListener('keydown', (e) => {
 });
 $('searchInput').addEventListener('input', () => { $('searchWrap').classList.toggle('has', !!$('searchInput').value); });
 $('searchClear').addEventListener('click', closeSearch);
+$('memoText').addEventListener('input', () => {
+  state.memoDirty = true;
+  state.memoStatus = '입력 중…';
+  $('memoFoot').textContent = state.memoStatus;
+  state.selAt = Date.now();
+  clearTimeout(memoTimer);
+  memoTimer = setTimeout(saveMemo, 1200);
+});
+$('memoText').addEventListener('blur', () => { if (state.memoDirty) saveMemo(); });
+$('memoListBtn').addEventListener('click', () => openMemoMode('list'));
+$('memoFindBtn').addEventListener('click', () => openMemoMode('find'));
+$('memoClose').addEventListener('click', closeMemoMode);
+$('memoFindInput').addEventListener('input', () => {
+  state.memoQ = $('memoFindInput').value;
+  state.selAt = Date.now();
+  renderMemoPanel();
+});
+$('memoFindInput').addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMemoMode(); });
+window.addEventListener('beforeunload', () => { if (state.memoDirty) saveMemo(); });
 $('searchClose').addEventListener('click', closeSearch);
 document.querySelectorAll('.range-chip').forEach((b) => b.addEventListener('click', () => runSearch(b.dataset.range)));
 $('dayReorder').addEventListener('click', () => {
