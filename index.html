@@ -80,6 +80,23 @@ button,input,textarea{font-family:inherit}
 .day-head .rel:empty{display:none}
 .day-card.sel .day-head h2{font-size:18px;letter-spacing:0;color:var(--p-text)}
 .day-actions{display:flex;align-items:center;gap:8px;flex:none}
+.search{position:relative;margin-left:8px;padding-bottom:2px}
+.search svg{position:absolute;left:14px;top:13px;pointer-events:none}
+.search input{width:240px;height:44px;padding:0 38px 0 42px;border-radius:22px;border:1px solid var(--line);background:#FFFFFF;color:var(--text);font-size:15px}
+.search input::placeholder{color:var(--muted)}
+.search input:focus{outline:none;border:2px solid var(--school);padding-left:41px}
+.search button{position:absolute;right:8px;top:8px;width:28px;height:28px;border-radius:14px;border:none;background:#EEF1F4;color:var(--muted);font-size:13px;cursor:pointer;display:none}
+.search.has button{display:block}
+mark.hl{background:#FFE08A;color:inherit;padding:0 1px;border-radius:2px}
+.side mark.hl{background:rgba(242,184,75,.45);color:#FFFFFF}
+.search-tools{display:flex;gap:6px;flex:none}
+.range-chip{height:30px;padding:0 12px;border-radius:15px;border:1px solid rgba(255,255,255,.35);background:transparent;color:var(--p-text);font-size:13px;cursor:pointer}
+.range-chip.on{background:var(--gold);border-color:var(--gold);color:var(--text);font-weight:700}
+.ev-item.res{align-items:center}
+.ev-item.res.cur{background:rgba(110,168,254,.18);box-shadow:inset 0 0 0 1px rgba(242,184,75,.8)}
+.res-date{width:52px;font-size:13px;color:var(--p-sub);flex:none}
+body.searching .todos,body.searching .dday{display:none}
+body.searching .day-card{flex:1 1 auto}
 .btn-reorder{height:32px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:transparent;color:var(--p-text);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;flex:none}
 .btn-reorder:hover{border-color:var(--p-text)}
 .btn-reorder.on{background:var(--gold);border-color:var(--gold);color:var(--text);font-weight:700}
@@ -184,6 +201,12 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
           <button class="btn-icon" id="next" aria-label="다음 달">›</button>
           <button class="btn-ghost" id="goToday">오늘</button>
         </div>
+        <div class="search" id="searchWrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A6573" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+          <label class="sr" for="searchInput">일정 검색</label>
+          <input id="searchInput" placeholder="일정 검색" maxlength="50" autocomplete="off">
+          <button id="searchClear" type="button" aria-label="검색어 지우기">✕</button>
+        </div>
       </div>
       <div class="legend">
         <span><i class="dot school"></i>학교</span>
@@ -207,7 +230,12 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
         <div class="day-actions">
           <button class="btn-reorder" id="dayReorder" style="display:none"></button>
           <button class="btn-back" id="dayBack" style="display:none">오늘로</button>
+          <button class="btn-back" id="searchClose" style="display:none">닫기</button>
         </div>
+      </div>
+      <div class="search-tools" id="searchTools" style="display:none">
+        <button class="range-chip" data-range="3y">최근 3년</button>
+        <button class="range-chip" data-range="all">전체 (10년)</button>
       </div>
       <div class="list" id="todayList"></div>
       <button class="add-btn" id="dayAdd"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>이 날에 일정 추가</button>
@@ -417,7 +445,9 @@ function renderGrid() {
       cell.appendChild(num);
     }
     evs.slice(0, maxChips).forEach((ev) => {
-      cell.appendChild(el('span', 'chip ' + ev.cal, chipLabel(ev, ds)));
+      const chip = el('span', 'chip ' + ev.cal);
+      appendHL(chip, chipLabel(ev), state.search ? state.search.q : '');
+      cell.appendChild(chip);
     });
     if (evs.length > maxChips) cell.appendChild(el('span', 'more', '+' + (evs.length - maxChips) + '개 더'));
     const hasOwn = evs.some((e) => e.cal !== 'holiday');
@@ -428,6 +458,7 @@ function renderGrid() {
 }
 
 function selectDay(ds) {
+  if (state.search) clearSearchUI();
   state.reorder = false;
   state.moved = '';
   state.sel = ds === ymd(todayDate()) ? '' : ds;
@@ -452,6 +483,9 @@ function renderDay() {
   const t = todayDate();
   const ts = ymd(t);
   $('today').textContent = t.getFullYear() + '년 ' + (t.getMonth() + 1) + '월 ' + t.getDate() + '일 ' + WEEK[t.getDay()] + '요일';
+  $('searchTools').style.display = state.search ? '' : 'none';
+  $('searchClose').style.display = state.search ? '' : 'none';
+  if (state.search) { renderSearch(); return; }
   const ds = state.sel || ts;
   const isToday = ds === ts;
   $('dayCard').classList.toggle('sel', !isToday);
@@ -492,6 +526,119 @@ function renderDay() {
     body.appendChild(el('span', 'ev-sub', sub.join(' · ')));
     item.appendChild(body);
     if (ev.cal !== 'holiday') { item.type = 'button'; item.addEventListener('click', () => openEdit(ev)); }
+    list.appendChild(item);
+  });
+}
+
+function appendHL(node, text, q) {
+  if (!q) { node.appendChild(document.createTextNode(text)); return; }
+  const lower = text.toLowerCase();
+  const lq = q.toLowerCase();
+  let i = 0;
+  while (true) {
+    const j = lower.indexOf(lq, i);
+    if (j < 0) { node.appendChild(document.createTextNode(text.slice(i))); break; }
+    if (j > i) node.appendChild(document.createTextNode(text.slice(i, j)));
+    node.appendChild(el('mark', 'hl', text.slice(j, j + q.length)));
+    i = j + q.length;
+  }
+}
+
+function memoSnippet(m, q) {
+  const i = m.toLowerCase().indexOf(q.toLowerCase());
+  const a = Math.max(0, i - 15);
+  return (a > 0 ? '…' : '') + m.slice(a, i + q.length + 30).replace(/\n/g, ' ');
+}
+
+function clearSearchUI() {
+  state.search = null;
+  $('searchInput').value = '';
+  $('searchWrap').classList.remove('has');
+  document.body.classList.remove('searching');
+}
+
+function closeSearch() {
+  clearSearchUI();
+  state.sel = '';
+  renderGrid();
+  renderDay();
+}
+
+async function runSearch(range) {
+  const q = $('searchInput').value.trim();
+  if (!q) { closeSearch(); return; }
+  const r = range || (state.search && state.search.q === q ? state.search.range : '3y');
+  state.search = { q: q, range: r, results: [], loading: true, error: '' };
+  state.reorder = false;
+  state.selAt = Date.now();
+  document.body.classList.add('searching');
+  renderGrid();
+  renderDay();
+  const tok = state.searchTok = (state.searchTok || 0) + 1;
+  try {
+    const res = await api('search', { q: q, range: r });
+    if (tok !== state.searchTok || !state.search) return;
+    state.search.results = res.events || [];
+  } catch (e) {
+    if (tok !== state.searchTok || !state.search) return;
+    state.search.error = e.message;
+  }
+  state.search.loading = false;
+  state.selAt = Date.now();
+  renderDay();
+}
+
+function jumpTo(ds) {
+  const d = parseYmd(ds);
+  const moved = d.getFullYear() !== state.y || d.getMonth() !== state.m;
+  state.y = d.getFullYear();
+  state.m = d.getMonth();
+  state.sel = ds;
+  state.selAt = Date.now();
+  render();
+  if (moved) load();
+}
+
+function renderSearch() {
+  const sr = state.search;
+  $('dayCard').classList.add('sel');
+  $('dayRel').textContent = sr.loading ? '검색 중…' : '검색 결과 ' + sr.results.length + '건';
+  $('dayTitle').textContent = '"' + sr.q + '"';
+  $('dayBack').style.display = 'none';
+  $('dayReorder').style.display = 'none';
+  $('dayAdd').style.display = 'none';
+  document.querySelectorAll('.range-chip').forEach((b) => b.classList.toggle('on', b.dataset.range === sr.range));
+  const list = $('todayList');
+  list.replaceChildren();
+  if (sr.error) { list.appendChild(el('span', 'empty', '검색 실패: ' + sr.error)); return; }
+  if (sr.loading) return;
+  if (!sr.results.length) {
+    list.appendChild(el('span', 'empty', sr.range === '3y' ? '최근 3년 안에 결과가 없습니다. 전체(10년)로 넓혀보세요.' : '결과가 없습니다.'));
+    return;
+  }
+  let cur = '';
+  sr.results.forEach((ev) => {
+    const d = ev.start.slice(0, 10);
+    const ym = d.slice(0, 7);
+    if (ym !== cur) {
+      cur = ym;
+      list.appendChild(el('span', 'grp-label', (+d.slice(0, 4)) + '년 ' + (+d.slice(5, 7)) + '월'));
+    }
+    const item = el('button', 'ev-item res ' + ev.cal + (state.sel === d ? ' cur' : ''));
+    item.type = 'button';
+    item.appendChild(el('span', 'res-date', d.slice(8, 10) + ' (' + WEEK[parseYmd(d).getDay()] + ')'));
+    const body = el('span', 'ev-body');
+    const t = el('span', 'ev-title');
+    appendHL(t, ev.title, sr.q);
+    body.appendChild(t);
+    if (ev.title.toLowerCase().indexOf(sr.q.toLowerCase()) < 0 && ev.memo) {
+      const sub = el('span', 'ev-sub');
+      sub.appendChild(document.createTextNode('메모: '));
+      appendHL(sub, memoSnippet(ev.memo, sr.q), sr.q);
+      body.appendChild(sub);
+    }
+    item.appendChild(body);
+    item.addEventListener('click', () => jumpTo(d));
     list.appendChild(item);
   });
 }
@@ -755,7 +902,15 @@ function tick() {
   const k = ymd(d);
   if (state.dayKey && state.dayKey !== k) { state.y = d.getFullYear(); state.m = d.getMonth(); state.sel = ''; load(); }
   state.dayKey = k;
-  if ((state.sel || state.reorder) && !state.modal && Date.now() - state.selAt > SEL_RESET_MS) { state.sel = ''; state.reorder = false; state.moved = ''; renderGrid(); renderDay(); }
+  if ((state.sel || state.reorder || state.search) && !state.modal && document.activeElement !== $('searchInput') && Date.now() - state.selAt > SEL_RESET_MS) {
+    state.sel = '';
+    state.reorder = false;
+    state.moved = '';
+    if (state.search) clearSearchUI();
+    const t = todayDate();
+    if (state.y !== t.getFullYear() || state.m !== t.getMonth()) { state.y = t.getFullYear(); state.m = t.getMonth(); render(); load(); }
+    else { renderGrid(); renderDay(); }
+  }
 }
 
 function focusSoon(input) {
@@ -766,7 +921,7 @@ function focusSoon(input) {
     input.focus();
   }, ms));
 }
-['fTitle', 'fMemo', 'todoAdd', 'keyInput'].forEach((id) => {
+['fTitle', 'fMemo', 'todoAdd', 'keyInput', 'searchInput'].forEach((id) => {
   $(id).addEventListener('pointerdown', () => focusSoon($(id)));
 });
 
@@ -775,6 +930,14 @@ $('next').addEventListener('click', () => { state.m++; if (state.m > 11) { state
 $('goToday').addEventListener('click', () => { const t = todayDate(); state.y = t.getFullYear(); state.m = t.getMonth(); render(); load(); });
 $('refresh').addEventListener('click', () => location.reload());
 $('dayBack').addEventListener('click', () => selectDay(ymd(todayDate())));
+$('searchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.isComposing) runSearch();
+  if (e.key === 'Escape') closeSearch();
+});
+$('searchInput').addEventListener('input', () => { $('searchWrap').classList.toggle('has', !!$('searchInput').value); });
+$('searchClear').addEventListener('click', closeSearch);
+$('searchClose').addEventListener('click', closeSearch);
+document.querySelectorAll('.range-chip').forEach((b) => b.addEventListener('click', () => runSearch(b.dataset.range)));
 $('dayReorder').addEventListener('click', () => {
   state.reorder = !state.reorder;
   state.moved = '';
