@@ -79,6 +79,18 @@ button,input,textarea{font-family:inherit}
 .day-head .rel{display:block;font-size:13px;font-weight:700;color:var(--gold);margin-bottom:2px}
 .day-head .rel:empty{display:none}
 .day-card.sel .day-head h2{font-size:18px;letter-spacing:0;color:var(--p-text)}
+.day-actions{display:flex;align-items:center;gap:8px;flex:none}
+.btn-reorder{height:32px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:transparent;color:var(--p-text);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;flex:none}
+.btn-reorder:hover{border-color:var(--p-text)}
+.btn-reorder.on{background:var(--gold);border-color:var(--gold);color:var(--text);font-weight:700}
+.grp-label{font-size:12px;font-weight:700;color:var(--p-muted);margin-top:4px}
+.ev-item.reo{cursor:default;align-items:center;padding:8px 8px 8px 14px}
+.ev-item.reo:hover{background:var(--p-item)}
+.ev-item.reo .ev-title{flex:1}
+.ev-item.moved,.ev-item.moved:hover{background:rgba(110,168,254,.18);box-shadow:inset 0 0 0 1px rgba(242,184,75,.8)}
+.arrow{width:34px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:transparent;color:var(--p-text);font-size:16px;cursor:pointer;flex:none}
+.arrow:disabled{border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.3);cursor:default}
+.arrow:not(:disabled):hover{background:var(--gold);border-color:var(--gold);color:var(--text)}
 .btn-back{height:36px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:transparent;color:var(--p-text);font-size:14px;cursor:pointer;flex:none}
 .btn-back:hover{border-color:var(--p-text)}
 .list{display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0}
@@ -192,7 +204,10 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
     <div class="card day-card" id="dayCard">
       <div class="day-head">
         <div><span class="rel" id="dayRel"></span><h2 id="dayTitle">오늘 일정</h2></div>
-        <button class="btn-back" id="dayBack" style="display:none">오늘로</button>
+        <div class="day-actions">
+          <button class="btn-reorder" id="dayReorder" style="display:none"></button>
+          <button class="btn-back" id="dayBack" style="display:none">오늘로</button>
+        </div>
       </div>
       <div class="list" id="todayList"></div>
       <button class="add-btn" id="dayAdd"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>이 날에 일정 추가</button>
@@ -328,10 +343,11 @@ async function load() {
   const ddEnd = addDays(t, 150);
   const to = g.end > ddEnd ? g.end : ddEnd;
   try {
-    const results = await Promise.all([api('list', { start: ymd(from), end: ymd(to) }), api('getTodos')]);
+    const results = await Promise.all([api('list', { start: ymd(from), end: ymd(to) }), api('getTodos'), api('getOrder')]);
     state.events = results[0].events;
     state.synced = results[0].syncedAt;
     state.todos = results[1].todos;
+    state.order = results[2].order || {};
     state.error = '';
   } catch (e) {
     state.error = e.message === 'unauthorized' ? 'API 키가 맞지 않습니다' : '연결 실패: ' + e.message;
@@ -350,7 +366,9 @@ function eventsOn(dateStr) {
   });
   const order = { holiday: 0, personal: 1, school: 2, pc: 3 };
   const rank = (ev) => (ev.cal in order ? order[ev.cal] : 9);
-  return list.sort((a, b) => rank(a) - rank(b) || a.start.localeCompare(b.start));
+  const ord = (state.order && state.order[dateStr]) || [];
+  const pos = (ev) => { const i = ord.indexOf(ev.id); return i < 0 ? 1e6 : i; };
+  return list.sort((a, b) => rank(a) - rank(b) || pos(a) - pos(b) || a.start.localeCompare(b.start));
 }
 
 function lastDay(ev) {
@@ -410,6 +428,8 @@ function renderGrid() {
 }
 
 function selectDay(ds) {
+  state.reorder = false;
+  state.moved = '';
   state.sel = ds === ymd(todayDate()) ? '' : ds;
   state.selAt = Date.now();
   renderGrid();
@@ -436,11 +456,26 @@ function renderDay() {
   const isToday = ds === ts;
   $('dayCard').classList.toggle('sel', !isToday);
   $('dayRel').textContent = isToday ? '' : relLabel(ds);
-  $('dayTitle').textContent = isToday ? '오늘 일정' : korDate(parseYmd(ds)) + ' 일정';
-  $('dayBack').style.display = isToday ? 'none' : '';
+  $('dayTitle').textContent = (isToday ? '오늘 일정' : korDate(parseYmd(ds)) + ' 일정') + (state.reorder ? ' · 순서 바꾸는 중' : '');
+  $('dayBack').style.display = isToday || state.reorder ? 'none' : '';
   const list = $('todayList');
   list.replaceChildren();
   const evs = eventsOn(ds);
+  const own = evs.filter((e) => e.cal !== 'holiday');
+  const canReorder = ['personal', 'school', 'pc'].some((c) => own.filter((e) => e.cal === c).length > 1);
+  if (!canReorder) state.reorder = false;
+  const rb = $('dayReorder');
+  rb.style.display = canReorder ? '' : 'none';
+  rb.classList.toggle('on', !!state.reorder);
+  rb.replaceChildren();
+  if (state.reorder) {
+    rb.textContent = '완료';
+  } else {
+    rb.insertAdjacentHTML('beforeend', '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4"/></svg>');
+    rb.appendChild(document.createTextNode('순서 바꾸기'));
+  }
+  $('dayAdd').style.display = state.reorder ? 'none' : '';
+  if (state.reorder) { renderReorder(list, ds, own); return; }
   if (!evs.length) list.appendChild(el('span', 'empty', '일정이 없습니다'));
   evs.forEach((ev) => {
     const item = el(ev.cal === 'holiday' ? 'div' : 'button', 'ev-item ' + ev.cal);
@@ -459,6 +494,49 @@ function renderDay() {
     if (ev.cal !== 'holiday') { item.type = 'button'; item.addEventListener('click', () => openEdit(ev)); }
     list.appendChild(item);
   });
+}
+
+function renderReorder(list, ds, own) {
+  const names = { personal: '개인', school: '학교', pc: 'PC만' };
+  ['personal', 'school', 'pc'].forEach((c) => {
+    const grp = own.filter((e) => e.cal === c);
+    if (!grp.length) return;
+    list.appendChild(el('span', 'grp-label', names[c]));
+    grp.forEach((ev, i) => {
+      const item = el('div', 'ev-item reo ' + c + (state.moved === ev.id ? ' moved' : ''));
+      item.appendChild(el('span', 'ev-title', ev.title));
+      const up = el('button', 'arrow', '↑');
+      up.type = 'button';
+      up.setAttribute('aria-label', ev.title + ' 위로');
+      up.disabled = i === 0;
+      up.addEventListener('click', () => moveEvent(ds, ev.id, -1));
+      const down = el('button', 'arrow', '↓');
+      down.type = 'button';
+      down.setAttribute('aria-label', ev.title + ' 아래로');
+      down.disabled = i === grp.length - 1;
+      down.addEventListener('click', () => moveEvent(ds, ev.id, 1));
+      item.appendChild(up);
+      item.appendChild(down);
+      list.appendChild(item);
+    });
+  });
+}
+
+async function moveEvent(ds, id, dir) {
+  const own = eventsOn(ds).filter((e) => e.cal !== 'holiday');
+  const i = own.findIndex((e) => e.id === id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= own.length || own[j].cal !== own[i].cal) return;
+  const ids = own.map((e) => e.id);
+  [ids[i], ids[j]] = [ids[j], ids[i]];
+  if (!state.order) state.order = {};
+  state.order[ds] = ids;
+  state.moved = id;
+  state.selAt = Date.now();
+  renderGrid();
+  renderDay();
+  try { await api('setOrder', { date: ds, ids: ids }, true); }
+  catch (e) { state.error = '순서 저장 실패: ' + e.message; renderFoot(); }
 }
 
 function renderDday() {
@@ -677,7 +755,7 @@ function tick() {
   const k = ymd(d);
   if (state.dayKey && state.dayKey !== k) { state.y = d.getFullYear(); state.m = d.getMonth(); state.sel = ''; load(); }
   state.dayKey = k;
-  if (state.sel && !state.modal && Date.now() - state.selAt > SEL_RESET_MS) { state.sel = ''; renderGrid(); renderDay(); }
+  if ((state.sel || state.reorder) && !state.modal && Date.now() - state.selAt > SEL_RESET_MS) { state.sel = ''; state.reorder = false; state.moved = ''; renderGrid(); renderDay(); }
 }
 
 function focusSoon(input) {
@@ -697,6 +775,12 @@ $('next').addEventListener('click', () => { state.m++; if (state.m > 11) { state
 $('goToday').addEventListener('click', () => { const t = todayDate(); state.y = t.getFullYear(); state.m = t.getMonth(); render(); load(); });
 $('refresh').addEventListener('click', () => location.reload());
 $('dayBack').addEventListener('click', () => selectDay(ymd(todayDate())));
+$('dayReorder').addEventListener('click', () => {
+  state.reorder = !state.reorder;
+  state.moved = '';
+  state.selAt = Date.now();
+  renderDay();
+});
 $('dayAdd').addEventListener('click', () => openAdd(state.sel || ymd(todayDate())));
 document.addEventListener('pointerdown', () => { state.selAt = Date.now(); });
 $('fDate').addEventListener('change', () => updateDays(true));
