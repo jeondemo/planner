@@ -592,9 +592,8 @@ function renderGrid() {
       });
       const more = Math.max(0, singles.length - slots) + hiddenBars;
       if (more) cell.appendChild(el('span', 'more', '+' + more + '개 더'));
-      const hasOwn = evs.some((e) => e.cal !== 'holiday');
-      cell.setAttribute('aria-label', korDate(d) + (hasOwn ? ' 일정 보기' : ' 일정 추가'));
-      cell.addEventListener('click', () => { if (hasOwn) selectDay(ds); else openAdd(ds); });
+      cell.setAttribute('aria-label', korDate(d) + ' 보기');
+      cell.addEventListener('click', () => selectDay(ds));
       grid.appendChild(cell);
     }
     bars.filter((b) => b.lane < maxChips).forEach((b) => {
