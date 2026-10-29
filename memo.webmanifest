@@ -8,7 +8,7 @@
   "background_color": "#FFFFFF",
   "theme_color": "#1F3A5F",
   "icons": [
-    { "src": "memo-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "memo-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "memo-icon_2.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "memo-icon_2.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
