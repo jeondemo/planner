@@ -34,6 +34,22 @@ button,input,textarea{font-family:inherit}
 .btn-icon:hover,.btn-ghost:hover{border-color:var(--muted)}
 .btn-ghost{height:44px;padding:0 18px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:15px;cursor:pointer}
 .legend{display:flex;gap:20px;font-size:15px;color:var(--sub);padding-bottom:6px}
+.ly-btn{white-space:nowrap;flex:none;height:44px;margin-left:10px;padding:0 16px;border-radius:22px;border:1px solid var(--line);background:#FFFFFF;color:var(--text);font-size:15px;font-weight:600;font-family:inherit;display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.ly-btn:hover{border-color:var(--muted)}
+.ly-btn i{width:14px;height:14px;border-radius:3px;border:2px dashed currentColor;display:inline-block}
+.ly-btn.on{background:#E2F200;border-color:#9AA800;color:#1B2430;box-shadow:0 0 0 4px rgba(226,242,0,.35)}
+.ly-note{white-space:nowrap;display:none;align-items:center;gap:10px;font-size:13px;color:#6B7400;font-weight:700;padding-bottom:6px}
+body.lyon .ly-note{display:inline-flex}
+body.lyon .legend{display:none}
+.ly-seg{display:inline-flex;border:1px solid #9AA800;border-radius:8px;overflow:hidden}
+.ly-seg button{white-space:nowrap;padding:3px 10px;font-size:12px;font-weight:700;background:#FFFFFF;color:#6B7400;border:none;font-family:inherit;cursor:pointer}
+.ly-seg button.on{background:#6B7400;color:#FFFFFF}
+.chip.ghost{position:relative;z-index:2;align-self:end;width:auto;margin:0 10px;background:#F4FF7A;border:2px dashed #8A9400;border-left:5px solid #8A9400;color:#1B2430;font-weight:700;height:25px;line-height:15px;font-size:13px;padding:3px 8px;cursor:pointer}
+.chip.ghost b{font-size:10px;font-weight:800;margin-right:6px;color:#F4FF7A;background:#1B2430;padding:1px 5px;border-radius:3px}
+.chip.ghost.match{background:#E2F200;border:2px solid #9AA800;border-left:5px solid #1B2430}
+.chip.ghost.match b{background:#1B2430;color:#E2F200}
+.chip.ghost.cont{border-left-width:2px;margin-left:0;border-top-left-radius:0;border-bottom-left-radius:0}
+.chip.ghost.open{margin-right:0;border-top-right-radius:0;border-bottom-right-radius:0}
 .legend span{display:flex;align-items:center;gap:8px}
 .legend .dot{width:4px;height:16px;border-radius:2px;border:none;transform:none}
 .dot{width:10px;height:10px;flex:none;display:inline-block}
@@ -312,7 +328,9 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
           <input id="searchInput" placeholder="일정 검색" maxlength="50" autocomplete="off">
           <button id="searchClear" type="button" aria-label="검색어 지우기">✕</button>
         </div>
+        <button type="button" class="ly-btn" id="lyBtn" aria-pressed="false"><i></i>작년 일정</button>
       </div>
+      <span class="ly-note" id="lyNote"><span id="lyLabel"></span><span class="ly-seg"><button type="button" id="lyWeek">요일 맞춤</button><button type="button" id="lyDate">같은 날짜</button></span></span>
       <div class="legend">
         <span><i class="dot school"></i>학교</span>
         <span><i class="dot personal"></i>개인</span>
@@ -480,7 +498,7 @@ let channel = null;
 try { channel = new BroadcastChannel('planner'); } catch (e) {}
 
 const now = new Date();
-const state = { y: now.getFullYear(), m: now.getMonth(), events: [], todos: [], synced: '', error: '', key: '', modal: null, dayKey: '' };
+const state = { y: now.getFullYear(), m: now.getMonth(), events: [], todos: [], synced: '', error: '', key: '', modal: null, dayKey: '', ly: { on: false, mode: 'week', cache: {}, key: '' } };
 const $ = (id) => document.getElementById(id);
 
 function el(tag, cls, text) {
@@ -543,6 +561,88 @@ async function load() {
     if (e.message === 'unauthorized') openKey('API 키가 맞지 않습니다. 다시 입력해 주세요.');
   }
   render();
+  if (state.ly && state.ly.on) loadLy();
+}
+
+function lyShift(ds, dir) {
+  const d = parseYmd(ds);
+  if (state.ly.mode === 'date') return ymd(new Date(d.getFullYear() + dir, d.getMonth(), d.getDate()));
+  return ymd(addDays(d, dir * 364));
+}
+
+async function loadLy() {
+  const ly = state.ly;
+  const g = gridRange();
+  const key = ymd(g.start) + '|' + ly.mode;
+  ly.key = key;
+  $('lyLabel').textContent = (state.y - 1) + '년 ' + (state.m + 1) + '월과 겹쳐 보는 중';
+  $('lyWeek').classList.toggle('on', ly.mode === 'week');
+  $('lyDate').classList.toggle('on', ly.mode === 'date');
+  if (!ly.cache[key]) {
+    try {
+      const res = await api('list', { start: lyShift(ymd(g.start), -1), end: lyShift(ymd(g.end), -1) });
+      ly.cache[key] = (res.events || []).filter((ev) => ev.cal !== 'holiday').map((ev) => {
+        const s0 = ev.start.slice(0, 10);
+        const e0 = lastDay(ev);
+        return { title: ev.title, s: lyShift(s0, 1), e: lyShift(e0, 1) };
+      });
+    } catch (e) {
+      $('lyLabel').textContent = '작년 일정 불러오기 실패: ' + e.message;
+      return;
+    }
+  }
+  if (state.ly.on && ly.key === key) renderGrid();
+}
+
+function setLy(on) {
+  state.ly.on = on;
+  state.selAt = Date.now();
+  document.body.classList.toggle('lyon', on);
+  $('lyBtn').classList.toggle('on', on);
+  $('lyBtn').setAttribute('aria-pressed', on ? 'true' : 'false');
+  if (on) loadLy(); else renderGrid();
+}
+
+function titleGrams(t) {
+  const c = t.replace(/[^가-힣A-Za-z]/g, '').replace(/(학기|학년|차)/g, '');
+  const set = new Set();
+  for (let i = 0; i < c.length - 1; i++) set.add(c.slice(i, i + 2));
+  return set;
+}
+
+function lyMatch(g) {
+  const a = titleGrams(g.title);
+  if (a.size < 2) return false;
+  const from = ymd(addDays(parseYmd(g.s), -7));
+  const to = ymd(addDays(parseYmd(g.e), 7));
+  return state.events.some((ev) => {
+    if (ev.cal === 'holiday') return false;
+    const s = ev.start.slice(0, 10);
+    if (s > to || lastDay(ev) < from) return false;
+    const b = titleGrams(ev.title);
+    if (b.size < 2) return false;
+    let n = 0;
+    a.forEach((x) => { if (b.has(x)) n++; });
+    return n / Math.min(a.size, b.size) >= 0.5;
+  });
+}
+
+function lyBars(ws) {
+  const ly = state.ly;
+  const list = ly && ly.on && ly.cache[ly.key] ? ly.cache[ly.key] : [];
+  const we = ymd(addDays(parseYmd(ws), 6));
+  const lanes = [];
+  return list.filter((g) => g.s <= we && g.e >= ws)
+    .sort((a, b) => a.s.localeCompare(b.s) || b.e.localeCompare(a.e))
+    .map((g) => {
+      const c0 = g.s < ws ? 0 : Math.round((parseYmd(g.s) - parseYmd(ws)) / 86400000);
+      const c1 = g.e > we ? 6 : Math.round((parseYmd(g.e) - parseYmd(ws)) / 86400000);
+      let lane = 0;
+      while (lanes[lane] && lanes[lane].some((x) => x <= c1 && x >= c0)) lane++;
+      if (!lanes[lane]) lanes[lane] = [];
+      for (let c = c0; c <= c1; c++) lanes[lane].push(c);
+      return { g: g, c0: c0, c1: c1, lane: lane, cont: g.s < ws, open: g.e > we };
+    });
 }
 
 function eventsOn(dateStr) {
@@ -668,6 +768,18 @@ function renderGrid() {
       bar.title = b.ev.title;
       bar.addEventListener('click', (e) => { e.stopPropagation(); selectDay(b.ev.start.slice(0, 10)); });
       grid.appendChild(bar);
+    });
+    lyBars(ws).filter((b) => b.lane < 2).forEach((b) => {
+      const gb = el('span', 'chip ghost' + (lyMatch(b.g) ? ' match' : '') + (b.cont ? ' cont' : '') + (b.open ? ' open' : ''));
+      gb.style.gridRow = String(r + 1);
+      gb.style.gridColumn = (b.c0 + 1) + ' / span ' + (b.c1 - b.c0 + 1);
+      gb.style.marginBottom = (10 + b.lane * 29) + 'px';
+      gb.appendChild(el('b', '', '작년'));
+      gb.appendChild(document.createTextNode(b.g.title));
+      gb.title = '작년: ' + b.g.title;
+      const day = ymd(addDays(parseYmd(ws), b.c0));
+      gb.addEventListener('click', (e) => { e.stopPropagation(); selectDay(day); });
+      grid.appendChild(gb);
     });
   }
 }
@@ -1544,8 +1656,9 @@ function tick() {
   if (state.dayKey && state.dayKey !== k) { state.y = d.getFullYear(); state.m = d.getMonth(); state.sel = ''; load(); }
   state.dayKey = k;
   const typing = [$('searchInput'), $('memoFindInput')].indexOf(document.activeElement) !== -1;
-  if ((state.sel || state.reorder || state.search || state.memoMode) && !state.modal && !typing && Date.now() - state.selAt > SEL_RESET_MS) {
+  if ((state.sel || state.reorder || state.search || state.memoMode || state.ly.on) && !state.modal && !typing && Date.now() - state.selAt > SEL_RESET_MS) {
     state.sel = '';
+    if (state.ly.on) { state.ly.on = false; document.body.classList.remove('lyon'); $('lyBtn').classList.remove('on'); $('lyBtn').setAttribute('aria-pressed', 'false'); }
     state.reorder = false;
     state.moved = '';
     if (state.search) clearSearchUI();
@@ -1568,8 +1681,11 @@ function focusSoon(input) {
   $(id).addEventListener('pointerdown', () => focusSoon($(id)));
 });
 
-$('prev').addEventListener('click', () => { state.m--; if (state.m < 0) { state.m = 11; state.y--; } render(); load(); });
-$('next').addEventListener('click', () => { state.m++; if (state.m > 11) { state.m = 0; state.y++; } render(); load(); });
+$('prev').addEventListener('click', () => { state.selAt = Date.now(); state.m--; if (state.m < 0) { state.m = 11; state.y--; } render(); load(); });
+$('next').addEventListener('click', () => { state.selAt = Date.now(); state.m++; if (state.m > 11) { state.m = 0; state.y++; } render(); load(); });
+$('lyBtn').addEventListener('click', () => setLy(!state.ly.on));
+$('lyWeek').addEventListener('click', () => { state.ly.mode = 'week'; state.selAt = Date.now(); loadLy(); });
+$('lyDate').addEventListener('click', () => { state.ly.mode = 'date'; state.selAt = Date.now(); loadLy(); });
 $('goToday').addEventListener('click', () => { const t = todayDate(); state.y = t.getFullYear(); state.m = t.getMonth(); render(); load(); });
 $('refresh').addEventListener('click', () => location.reload());
 $('dayBack').addEventListener('click', () => selectDay(ymd(todayDate())));
