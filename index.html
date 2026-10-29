@@ -199,7 +199,7 @@ button.ev-item:hover{background:rgba(255,255,255,.13)}
 .foot button{margin-left:auto;height:32px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:transparent;color:var(--p-text);font-size:13px;cursor:pointer}
 .backdrop{position:fixed;inset:0;background:rgba(30,38,50,.45);display:none;align-items:center;justify-content:center;z-index:10}
 .backdrop.open{display:flex}
-.dialog{width:500px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow-y:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px 28px;display:flex;flex-direction:column;gap:16px;color:var(--text);box-shadow:0 20px 50px rgba(30,38,50,.25)}
+.dialog{width:500px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow-y:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 26px;display:flex;flex-direction:column;gap:11px;color:var(--text);box-shadow:0 20px 50px rgba(30,38,50,.25)}
 .dlg-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .dlg-head .k{font-size:14px;color:var(--muted)}
 .dlg-head h2{margin:2px 0 0;font-size:22px;font-weight:700}
@@ -245,6 +245,20 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
 .date-btn.on{border:2px solid var(--school);background:var(--school-bg)}
 .date-btn.on .lbl{color:var(--school);font-weight:700}
 .quick{display:flex;gap:6px;flex-wrap:wrap}
+.tm-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:2px}
+.tm-seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.tm-seg button{height:32px;padding:0 16px;border:none;background:#FFFFFF;color:var(--text);font-size:14px;font-family:inherit;cursor:pointer}
+.tm-seg button.on{background:var(--navy);color:#FFFFFF;font-weight:600}
+.tm-seg button:disabled{cursor:default}
+.tm-body{display:flex;flex-direction:column;gap:8px}
+.tm-btn{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.tp{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.tp-h{font-size:13px;font-weight:700;color:var(--sub)}
+.tp-sub{font-size:11px;font-weight:500;color:var(--muted)}
+.tp-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
+.tp-grid button{height:32px;border-radius:8px;border:1px solid var(--line);background:#FFFFFF;font-size:14px;font-family:inherit;color:var(--text);cursor:pointer;font-variant-numeric:tabular-nums}
+.tp-grid button:hover{border-color:var(--muted)}
+.tp-grid button.on{background:var(--navy);border-color:var(--navy);color:#FFFFFF;font-weight:700}
 .quick button{height:30px;padding:0 12px;border-radius:15px;border:1px solid var(--line);background:#FFFFFF;color:var(--text);font-size:13px;cursor:pointer;font-family:inherit}
 .quick button:hover{border-color:var(--muted)}
 .quick button.on{background:var(--navy);border-color:var(--navy);color:#FFFFFF;font-weight:600}
@@ -397,7 +411,30 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
         <button type="button" data-days="5">5일</button>
         <button type="button" data-days="7">1주</button>
       </div>
-      <div class="mini">
+      <div class="tm-row">
+        <span class="lb" style="font-size:14px;color:var(--sub)">시간</span>
+        <div class="tm-seg"><button type="button" id="tmAll">종일</button><button type="button" id="tmTimed">시간 지정</button></div>
+      </div>
+      <div class="tm-body" id="tmBody">
+        <div class="range-btns">
+          <button type="button" class="date-btn tm-btn" id="pickTS"><span class="lbl" id="pickTSLbl">시작 시각</span><span id="pickTSVal"></span></button>
+          <span class="tilde">~</span>
+          <button type="button" class="date-btn tm-btn" id="pickTE"><span class="lbl" id="pickTELbl">끝 시각</span><span id="pickTEVal"></span></button>
+        </div>
+        <div class="quick" id="quickDur">
+          <button type="button" data-min="60">1시간</button>
+          <button type="button" data-min="120">2시간</button>
+          <button type="button" data-min="180">3시간</button>
+          <button type="button" data-min="240">반나절</button>
+        </div>
+      </div>
+      <div class="tp" id="timePick" style="display:none">
+        <span class="tp-h">시 <span class="tp-sub">(24시간)</span></span>
+        <div class="tp-grid" id="tpHours"></div>
+        <span class="tp-h">분</span>
+        <div class="tp-grid" id="tpMins"></div>
+      </div>
+      <div class="mini" id="miniCal">
         <div class="mini-head"><button type="button" id="miniPrev" aria-label="이전 달">‹</button><span id="miniTitle"></span><button type="button" id="miniNext" aria-label="다음 달">›</button></div>
         <div class="mini-week"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
         <div class="mini-grid" id="miniGrid"></div>
@@ -704,7 +741,6 @@ function renderDay() {
     const s = ev.start.slice(0, 10);
     const last = lastDay(ev);
     if (last !== s) sub.push(shortDate(s) + '~' + shortDate(last));
-    if (!ev.allDay && s === ds) sub.push(ev.start.slice(11, 16));
     if (ev.memo) sub.push(ev.memo.split('\n')[0].slice(0, 60));
     body.appendChild(el('span', 'ev-sub', sub.join(' · ')));
     item.appendChild(body);
@@ -1183,6 +1219,92 @@ function startPicker(readOnly) {
   renderPicker();
 }
 
+function tmMin(t) { return (+t.slice(0, 2)) * 60 + (+t.slice(3, 5)); }
+function tmStr(n) { n = Math.max(0, Math.min(n, 23 * 60 + 50)); return pad(Math.floor(n / 60)) + ':' + pad(n % 60); }
+
+function sameDayRange() { return ($('fEndDate').value || $('fDate').value) === $('fDate').value; }
+
+function setTimed(on) {
+  const m = state.modal;
+  if (!m || (state.pick && state.pick.ro)) return;
+  m.timed = on;
+  if (!on && state.pick && (state.pick.target === 'tstart' || state.pick.target === 'tend')) state.pick.target = 'end';
+  renderPicker();
+}
+
+function pickTime(kind, val) {
+  const m = state.modal;
+  const p = state.pick;
+  if (!m || !p || p.ro) return;
+  const key = p.target === 'tstart' ? 'startTime' : 'endTime';
+  const cur = m[key] || '09:00';
+  const nt = kind === 'h' ? pad(val) + ':' + cur.slice(3, 5) : cur.slice(0, 3) + pad(val);
+  if (key === 'startTime') {
+    const dur = sameDayRange() ? Math.max(10, tmMin(m.endTime) - tmMin(m.startTime)) : 0;
+    m.startTime = nt;
+    if (dur) m.endTime = tmStr(tmMin(nt) + dur);
+  } else {
+    m.endTime = nt;
+  }
+  renderPicker();
+}
+
+function quickDur(min) {
+  const m = state.modal;
+  if (!m || !state.pick || state.pick.ro) return;
+  $('fEndDate').value = $('fDate').value;
+  m.endTouched = true;
+  m.endTime = tmStr(tmMin(m.startTime) + min);
+  updateDays(false);
+  renderPicker();
+}
+
+function renderTimePick() {
+  const m = state.modal;
+  const p = state.pick;
+  const timed = !!m.timed;
+  $('tmAll').classList.toggle('on', !timed);
+  $('tmTimed').classList.toggle('on', timed);
+  $('tmAll').disabled = p.ro;
+  $('tmTimed').disabled = p.ro;
+  $('tmBody').style.display = timed ? '' : 'none';
+  const tt = timed && (p.target === 'tstart' || p.target === 'tend');
+  $('timePick').style.display = tt ? '' : 'none';
+  $('miniCal').style.display = tt ? 'none' : '';
+  if (!timed) return;
+  $('pickTSVal').textContent = m.startTime;
+  $('pickTEVal').textContent = m.endTime;
+  $('pickTS').classList.toggle('on', !p.ro && p.target === 'tstart');
+  $('pickTE').classList.toggle('on', !p.ro && p.target === 'tend');
+  $('pickTSLbl').textContent = !p.ro && p.target === 'tstart' ? '시작 시각 · 고르세요' : '시작 시각';
+  $('pickTELbl').textContent = !p.ro && p.target === 'tend' ? '끝 시각 · 고르세요' : '끝 시각';
+  $('pickTS').disabled = p.ro;
+  $('pickTE').disabled = p.ro;
+  const diff = sameDayRange() ? tmMin(m.endTime) - tmMin(m.startTime) : -1;
+  document.querySelectorAll('#quickDur button').forEach((b) => {
+    b.classList.toggle('on', +b.dataset.min === diff);
+    b.disabled = p.ro;
+  });
+  if (!tt) return;
+  const cur = p.target === 'tstart' ? m.startTime : m.endTime;
+  const hours = $('tpHours');
+  hours.replaceChildren();
+  for (let h = 6; h <= 23; h++) {
+    const b = el('button', +cur.slice(0, 2) === h ? 'on' : '', pad(h));
+    b.type = 'button';
+    b.addEventListener('click', () => pickTime('h', h));
+    hours.appendChild(b);
+  }
+  const mins = $('tpMins');
+  mins.replaceChildren();
+  [0, 10, 20, 30, 40, 50].forEach((mm) => {
+    const b = el('button', +cur.slice(3, 5) === mm ? 'on' : '', pad(mm));
+    b.type = 'button';
+    b.addEventListener('click', () => pickTime('m', mm));
+    mins.appendChild(b);
+  });
+}
+
 function renderPicker() {
   const p = state.pick;
   if (!p) return;
@@ -1200,6 +1322,7 @@ function renderPicker() {
     b.disabled = p.ro;
   });
   ['pickStart', 'pickEnd', 'miniPrev', 'miniNext'].forEach((id) => { $(id).disabled = p.ro; });
+  renderTimePick();
   $('miniTitle').textContent = p.y + '년 ' + (p.m + 1) + '월';
   const grid = $('miniGrid');
   grid.replaceChildren();
@@ -1260,6 +1383,7 @@ function quickDays(n) {
 function setPickTarget(t) {
   if (!state.pick || state.pick.ro) return;
   state.pick.target = t;
+  if (t === 'tstart' || t === 'tend') { renderPicker(); return; }
   const d = parseYmd((t === 'start' ? $('fDate').value : $('fEndDate').value) || $('fDate').value || ymd(todayDate()));
   state.pick.y = d.getFullYear();
   state.pick.m = d.getMonth();
@@ -1332,7 +1456,7 @@ function showDone(msg) {
 function openAdd(dateStr) {
   if (WALLPAPER) { openPopup({ popup: 'add', date: dateStr }); return; }
   $('dlgInfo').textContent = '저장하면 구글 캘린더를 거쳐 폰의 삼성 캘린더에도 표시됩니다';
-  openModal('새 일정', korDate(parseYmd(dateStr)), { id: '', cal: 'school', title: '', date: dateStr, endDate: dateStr, memo: '' });
+  openModal('새 일정', korDate(parseYmd(dateStr)), { id: '', cal: 'school', title: '', date: dateStr, endDate: dateStr, memo: '', timed: true, startTime: '09:00', endTime: '10:00' });
 }
 
 function openEdit(ev) {
@@ -1340,8 +1464,11 @@ function openEdit(ev) {
   if (WALLPAPER) { openPopup({ popup: 'edit', id: ev.id, cal: ev.cal, date: date }); return; }
   $('dlgInfo').textContent = ev.recurring ? '반복 일정은 폰의 삼성 캘린더에서 수정해 주세요' : '마지막 수정 ' + ev.updated;
   openModal(ev.recurring ? '반복 일정' : '일정 수정', korDate(parseYmd(date)), {
-    id: ev.id, oldCal: ev.cal, cal: ev.cal, title: ev.title, date: date, endDate: lastDay(ev),
-    timed: !ev.allDay, origDate: date, origEndDate: lastDay(ev), endTouched: true,
+    id: ev.id, oldCal: ev.cal, cal: ev.cal, title: ev.title, date: date,
+    endDate: ev.allDay ? lastDay(ev) : ev.end.slice(0, 10),
+    timed: !ev.allDay, endTouched: true,
+    startTime: ev.allDay ? '09:00' : ev.start.slice(11, 16),
+    endTime: ev.allDay ? '10:00' : ev.end.slice(11, 16),
     memo: ev.memo
   }, ev.recurring);
 }
@@ -1365,7 +1492,12 @@ async function saveModal() {
   if (!payload.title) { $('dlgMsg').textContent = '제목을 입력해 주세요'; $('fTitle').focus(); return; }
   if (!payload.date) { $('dlgMsg').textContent = '시작일을 선택해 주세요'; return; }
   if (payload.endDate < payload.date) { $('dlgMsg').textContent = '종료일이 시작일보다 빠를 수 없습니다'; return; }
-  if (m.timed && payload.date === m.origDate && payload.endDate === m.origEndDate) payload.keepTime = true;
+  if (m.timed) {
+    payload.timed = true;
+    payload.startTime = m.startTime;
+    payload.endTime = m.endTime;
+    if (payload.date + m.startTime >= payload.endDate + m.endTime) { $('dlgMsg').textContent = '끝 시각이 시작 시각보다 늦어야 해요'; return; }
+  }
   const btn = $('dlgSave');
   btn.disabled = true;
   btn.textContent = '저장 중…';
@@ -1447,6 +1579,11 @@ $('searchInput').addEventListener('keydown', (e) => {
 });
 $('searchInput').addEventListener('input', () => { $('searchWrap').classList.toggle('has', !!$('searchInput').value); });
 $('searchClear').addEventListener('click', closeSearch);
+$('tmAll').addEventListener('click', () => setTimed(false));
+$('tmTimed').addEventListener('click', () => setTimed(true));
+$('pickTS').addEventListener('click', () => setPickTarget('tstart'));
+$('pickTE').addEventListener('click', () => setPickTarget('tend'));
+document.querySelectorAll('#quickDur button').forEach((b) => b.addEventListener('click', () => quickDur(+b.dataset.min)));
 $('memoText').addEventListener('input', () => {
   state.memoDirty = true;
   state.memoStatus = '입력 중…';
