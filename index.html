@@ -44,12 +44,18 @@ body.lyon .legend{display:none}
 .ly-seg{display:inline-flex;border:1px solid #9AA800;border-radius:8px;overflow:hidden}
 .ly-seg button{white-space:nowrap;padding:3px 10px;font-size:12px;font-weight:700;background:#FFFFFF;color:#6B7400;border:none;font-family:inherit;cursor:pointer}
 .ly-seg button.on{background:#6B7400;color:#FFFFFF}
-.chip.ghost{position:relative;z-index:2;align-self:end;width:auto;margin:0 10px;background:#F4FF7A;border:2px dashed #8A9400;border-left:5px solid #8A9400;color:#1B2430;font-weight:700;height:25px;line-height:15px;font-size:13px;padding:3px 8px;cursor:pointer}
+.chip.ghost{position:relative;z-index:2;align-self:start;width:auto;margin:0 10px;background:#F4FF7A;border:2px dashed #8A9400;border-left:5px solid #8A9400;color:#1B2430;font-weight:700;height:25px;line-height:15px;font-size:13px;padding:3px 8px;cursor:pointer}
 .chip.ghost b{font-size:10px;font-weight:800;margin-right:6px;color:#F4FF7A;background:#1B2430;padding:1px 5px;border-radius:3px}
 .chip.ghost.match{background:#E2F200;border:2px solid #9AA800;border-left:5px solid #1B2430}
 .chip.ghost.match b{background:#1B2430;color:#E2F200}
 .chip.ghost.cont{border-left-width:2px;margin-left:0;border-top-left-radius:0;border-bottom-left-radius:0}
 .chip.ghost.open{margin-right:0;border-top-right-radius:0;border-bottom-right-radius:0}
+body.lyon:not(.lyback) .cell .chip,body.lyon:not(.lyback) .chip.bar,body.lyon:not(.lyback) .cell .more{filter:blur(1.5px);opacity:.35}
+body.lyback .chip.ghost{align-self:end;filter:blur(1.2px);opacity:.45;pointer-events:none}
+body.lyback .ly-more{opacity:.6}
+.ly-btn .st{font-size:12px;font-weight:700;padding:2px 8px;border-radius:10px;background:#1B2430;color:#E2F200}
+.ly-btn:not(.on) .st{display:none}
+.ly-more{position:relative;z-index:3;align-self:start;justify-self:end;margin:12px 10px 0;font-size:12px;font-weight:800;color:#1B2430;background:#E2F200;border:1px solid #9AA800;border-radius:10px;padding:1px 8px;pointer-events:none}
 .legend span{display:flex;align-items:center;gap:8px}
 .legend .dot{width:4px;height:16px;border-radius:2px;border:none;transform:none}
 .dot{width:10px;height:10px;flex:none;display:inline-block}
@@ -328,7 +334,7 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
           <input id="searchInput" placeholder="일정 검색" maxlength="50" autocomplete="off">
           <button id="searchClear" type="button" aria-label="검색어 지우기">✕</button>
         </div>
-        <button type="button" class="ly-btn" id="lyBtn" aria-pressed="false"><i></i>작년 일정</button>
+        <button type="button" class="ly-btn" id="lyBtn" aria-pressed="false"><i></i>작년 일정<span class="st" id="lySt"></span></button>
       </div>
       <span class="ly-note" id="lyNote"><span id="lyLabel"></span><span class="ly-seg"><button type="button" id="lyWeek">요일 맞춤</button><button type="button" id="lyDate">같은 날짜</button></span></span>
       <div class="legend">
@@ -594,13 +600,22 @@ async function loadLy() {
   if (state.ly.on && ly.key === key) renderGrid();
 }
 
-function setLy(on) {
+function setLy(on, back) {
   state.ly.on = on;
+  state.ly.back = on && !!back;
   state.selAt = Date.now();
   document.body.classList.toggle('lyon', on);
+  document.body.classList.toggle('lyback', state.ly.back);
   $('lyBtn').classList.toggle('on', on);
   $('lyBtn').setAttribute('aria-pressed', on ? 'true' : 'false');
+  $('lySt').textContent = !on ? '' : state.ly.back ? '올해 앞' : '작년 앞';
   if (on) loadLy(); else renderGrid();
+}
+
+function cycleLy() {
+  if (!state.ly.on) setLy(true, false);
+  else if (!state.ly.back) setLy(true, true);
+  else setLy(false);
 }
 
 function titleGrams(t) {
@@ -769,11 +784,22 @@ function renderGrid() {
       bar.addEventListener('click', (e) => { e.stopPropagation(); selectDay(b.ev.start.slice(0, 10)); });
       grid.appendChild(bar);
     });
-    lyBars(ws).filter((b) => b.lane < 2).forEach((b) => {
+    const lyAll = lyBars(ws);
+    const lyMax = state.ly.back ? 2 : g.rows === 6 ? 3 : 4;
+    for (let c = 0; c < 7; c++) {
+      const hid = lyAll.filter((b) => b.lane >= lyMax && b.c0 <= c && b.c1 >= c).length;
+      if (!hid) continue;
+      const mt = el('span', 'ly-more', '작년 +' + hid);
+      mt.style.gridRow = String(r + 1);
+      mt.style.gridColumn = String(c + 1);
+      grid.appendChild(mt);
+    }
+    lyAll.filter((b) => b.lane < lyMax).forEach((b) => {
       const gb = el('span', 'chip ghost' + (lyMatch(b.g) ? ' match' : '') + (b.cont ? ' cont' : '') + (b.open ? ' open' : ''));
       gb.style.gridRow = String(r + 1);
       gb.style.gridColumn = (b.c0 + 1) + ' / span ' + (b.c1 - b.c0 + 1);
-      gb.style.marginBottom = (10 + b.lane * 29) + 'px';
+      if (state.ly.back) gb.style.marginBottom = (8 + b.lane * 29) + 'px';
+      else gb.style.marginTop = (44 + b.lane * 29) + 'px';
       gb.appendChild(el('b', '', '작년'));
       gb.appendChild(document.createTextNode(b.g.title));
       gb.title = '작년: ' + b.g.title;
@@ -1658,7 +1684,7 @@ function tick() {
   const typing = [$('searchInput'), $('memoFindInput')].indexOf(document.activeElement) !== -1;
   if ((state.sel || state.reorder || state.search || state.memoMode || state.ly.on) && !state.modal && !typing && Date.now() - state.selAt > SEL_RESET_MS) {
     state.sel = '';
-    if (state.ly.on) { state.ly.on = false; document.body.classList.remove('lyon'); $('lyBtn').classList.remove('on'); $('lyBtn').setAttribute('aria-pressed', 'false'); }
+    if (state.ly.on) { state.ly.on = false; state.ly.back = false; document.body.classList.remove('lyon', 'lyback'); $('lyBtn').classList.remove('on'); $('lyBtn').setAttribute('aria-pressed', 'false'); $('lySt').textContent = ''; }
     state.reorder = false;
     state.moved = '';
     if (state.search) clearSearchUI();
@@ -1683,7 +1709,7 @@ function focusSoon(input) {
 
 $('prev').addEventListener('click', () => { state.selAt = Date.now(); state.m--; if (state.m < 0) { state.m = 11; state.y--; } render(); load(); });
 $('next').addEventListener('click', () => { state.selAt = Date.now(); state.m++; if (state.m > 11) { state.m = 0; state.y++; } render(); load(); });
-$('lyBtn').addEventListener('click', () => setLy(!state.ly.on));
+$('lyBtn').addEventListener('click', cycleLy);
 $('lyWeek').addEventListener('click', () => { state.ly.mode = 'week'; state.selAt = Date.now(); loadLy(); });
 $('lyDate').addEventListener('click', () => { state.ly.mode = 'date'; state.selAt = Date.now(); loadLy(); });
 $('goToday').addEventListener('click', () => { const t = todayDate(); state.y = t.getFullYear(); state.m = t.getMonth(); render(); load(); });
