@@ -907,35 +907,14 @@ function bindMemo(ds) {
 
 function renderMemoCard(ds) {
   const ts = ymd(todayDate());
-  const past = ds < ts;
-  document.body.classList.toggle('pastday', past);
-  $('memoCard').classList.toggle('past', past);
-  $('memoText').style.display = past ? 'none' : '';
-  $('memoView').style.display = past ? '' : 'none';
-  $('memoBadge').style.display = past ? '' : 'none';
+  document.body.classList.toggle('pastday', ds < ts);
+  $('memoCard').classList.remove('past');
+  $('memoText').style.display = '';
+  $('memoView').style.display = 'none';
+  $('memoBadge').style.display = 'none';
   const d = parseYmd(ds);
-  if (!past) {
-    $('memoTitle').textContent = ds === ts ? '✎ 오늘 메모' : '✎ ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 메모';
-    bindMemo(ds);
-    return;
-  }
-  if (state.memoDirty && state.memoDate) saveMemo();
-  state.memoDate = '';
-  $('memoTitle').textContent = (d.getMonth() + 1) + '월 ' + d.getDate() + '일 메모 기록';
-  const rec = state.memoRecs ? state.memoRecs[ds] : undefined;
-  if (rec === undefined && state.memoDays && state.memoDays.has(ds)) {
-    $('memoView').textContent = '불러오는 중…';
-    $('memoFoot').textContent = '';
-    fetchMemoDay(ds);
-    return;
-  }
-  if (!rec || !rec.text) {
-    $('memoView').textContent = rec && rec.error ? '불러오기 실패: ' + rec.error : '이 날은 메모 기록이 없습니다';
-    $('memoFoot').textContent = '';
-    return;
-  }
-  $('memoView').textContent = rec.text;
-  $('memoFoot').textContent = '그날 마지막으로 저장된 내용 · ' + rec.at + ' 저장';
+  $('memoTitle').textContent = ds === ts ? '✎ 오늘 메모' : '✎ ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 메모';
+  bindMemo(ds);
 }
 
 function clearMemoMode() {
