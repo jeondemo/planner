@@ -73,7 +73,30 @@ button,input,textarea{font-family:inherit}
 .card{display:flex;flex-direction:column;gap:10px;min-height:0}
 .card h2{margin:0;font-size:14px;font-weight:700;letter-spacing:1px;color:var(--p-muted)}
 .clock-card,.dday,.foot{flex-shrink:0}
-.clock-card{gap:6px;padding-bottom:20px;border-bottom:1px solid var(--p-line)}
+.clock-card{flex-direction:row;align-items:stretch;gap:16px;padding-bottom:20px;border-bottom:1px solid var(--p-line)}
+.ck-left{display:flex;flex-direction:column;justify-content:center;gap:6px;flex:none}
+.ck-left .clock{font-size:50px}
+.ck-left .date{font-size:14px;line-height:1.4}
+.ck{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14)}
+.ck-h{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--p-sub)}
+.ck-h b{font-size:11px;color:var(--gold);letter-spacing:0}
+.ck-list{display:flex;flex-direction:column;gap:2px;max-height:122px;overflow-y:auto}
+.ck-empty{font-size:12px;color:var(--p-muted);padding:2px 0}
+.ck-row{display:flex;align-items:center;gap:6px;min-height:24px;font-size:13px;line-height:1.35;min-width:0}
+.ck-row label{flex:1;display:flex;align-items:center;gap:7px;min-width:0;cursor:pointer}
+.ck-row input{width:14px;height:14px;margin:0;flex:none;accent-color:var(--gold)}
+.ck-row label span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ck-row .del{width:22px;height:22px;border:none;background:transparent;color:var(--p-muted);font-size:12px;cursor:pointer;border-radius:6px;opacity:0;flex:none;padding:0}
+.ck-row:hover .del,.ck-row .del:focus{opacity:1}
+.ck-row .del:hover{color:var(--p-hol)}
+.ck-row.ask{background:rgba(242,184,75,.16);border-radius:6px;padding:0 6px;gap:6px}
+.ck-row.ask .q{flex:1;font-size:12px;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ck-row.ask button{height:20px;padding:0 8px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;flex:none;font-family:inherit}
+.ck-row.ask .yes{border:none;background:var(--gold);color:#1B2430}
+.ck-row.ask .no{border:1px solid rgba(255,255,255,.35);background:transparent;color:#FFFFFF}
+.ck-add{height:26px;margin-top:2px;padding:0 2px;border:none;border-top:1px dashed rgba(255,255,255,.18);background:transparent;color:var(--p-text);font-size:12px;font-family:inherit;width:100%}
+.ck-add::placeholder{color:var(--p-muted)}
+.ck-add:focus{outline:none;border-top-color:var(--gold)}
 .clock{font-size:68px;font-weight:700;line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums}
 .date{font-size:18px;color:var(--p-sub)}
 .day-card{flex:0 1 auto;padding:14px;margin:-14px -14px 0;border:1px solid transparent;border-radius:14px}
@@ -289,8 +312,16 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
 
   <aside class="side" aria-label="오늘">
     <div class="card clock-card">
-      <span class="clock" id="clock"></span>
-      <span class="date" id="today"></span>
+      <div class="ck-left">
+        <span class="clock" id="clock"></span>
+        <span class="date" id="today"></span>
+      </div>
+      <div class="ck">
+        <div class="ck-h"><span>체크리스트</span><b id="ckCount"></b></div>
+        <div class="ck-list" id="todoList"></div>
+        <label class="sr" for="todoAdd">체크리스트 추가</label>
+        <input class="ck-add" id="todoAdd" placeholder="+ 추가 (Enter)" maxlength="100" autocomplete="off">
+      </div>
     </div>
     <div class="card day-card" id="dayCard">
       <div class="day-head">
@@ -313,12 +344,6 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
       </div>
       <div class="list" id="todayList"></div>
       <button class="add-btn" id="dayAdd"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>이 날에 일정 추가</button>
-    </div>
-    <div class="card todos">
-      <h2>할 일</h2>
-      <div class="list" id="todoList"></div>
-      <label class="sr" for="todoAdd">할 일 추가</label>
-      <input class="todo-add" id="todoAdd" placeholder="+ 할 일 추가 (Enter)" maxlength="100" autocomplete="off">
     </div>
     <div class="card dday" id="dday"></div>
     <div class="memo" id="memoCard">
@@ -636,7 +661,7 @@ function shortDate(s) {
 function renderDay() {
   const t = todayDate();
   const ts = ymd(t);
-  $('today').textContent = t.getFullYear() + '년 ' + (t.getMonth() + 1) + '월 ' + t.getDate() + '일 ' + WEEK[t.getDay()] + '요일';
+  $('today').replaceChildren(t.getFullYear() + '년 ' + (t.getMonth() + 1) + '월 ' + t.getDate() + '일', el('br'), WEEK[t.getDay()] + '요일');
   $('searchTools').style.display = state.search ? '' : 'none';
   $('searchClose').style.display = state.search ? '' : 'none';
   $('memoClose').style.display = state.memoMode ? '' : 'none';
@@ -1059,23 +1084,53 @@ function renderDday() {
   box.appendChild(el('span', 'v', diff === 0 ? 'D-DAY' : 'D-' + diff));
 }
 
+let ckTimer = null;
+
 function renderTodos() {
   const list = $('todoList');
   list.replaceChildren();
-  if (!state.todos.length) list.appendChild(el('span', 'empty', '할 일이 없습니다'));
-  state.todos.forEach((t, i) => {
-    const row = el('div', 'todo' + (t.done ? ' done' : ''));
+  if (state.ckAsk && state.todos.indexOf(state.ckAsk) === -1) state.ckAsk = null;
+  const left = state.todos.length;
+  $('ckCount').textContent = left ? left + '개 남음' : '';
+  if (!left) list.appendChild(el('span', 'ck-empty', '비어 있음'));
+  state.todos.forEach((t) => {
+    if (state.ckAsk === t) {
+      const row = el('div', 'ck-row ask');
+      row.appendChild(el('span', 'q', '삭제할까요?'));
+      const yes = el('button', 'yes', '네');
+      yes.type = 'button';
+      yes.addEventListener('click', () => {
+        clearTimeout(ckTimer);
+        state.ckAsk = null;
+        state.todos.splice(state.todos.indexOf(t), 1);
+        saveTodos();
+      });
+      const no = el('button', 'no', '아니요');
+      no.type = 'button';
+      no.addEventListener('click', () => { clearTimeout(ckTimer); state.ckAsk = null; renderTodos(); });
+      row.appendChild(yes);
+      row.appendChild(no);
+      row.title = t.text;
+      list.appendChild(row);
+      return;
+    }
+    const row = el('div', 'ck-row');
     const lb = el('label');
     const cb = el('input');
     cb.type = 'checkbox';
-    cb.checked = t.done;
-    cb.addEventListener('change', () => { state.todos[i].done = cb.checked; saveTodos(); });
+    cb.addEventListener('change', () => {
+      clearTimeout(ckTimer);
+      state.ckAsk = t;
+      renderTodos();
+      ckTimer = setTimeout(() => { if (state.ckAsk === t) { state.ckAsk = null; renderTodos(); } }, 5000);
+    });
     lb.appendChild(cb);
     lb.appendChild(el('span', '', t.text));
+    lb.title = t.text;
     const del = el('button', 'del', '✕');
     del.type = 'button';
     del.setAttribute('aria-label', t.text + ' 삭제');
-    del.addEventListener('click', () => { state.todos.splice(i, 1); saveTodos(); });
+    del.addEventListener('click', () => { state.todos.splice(state.todos.indexOf(t), 1); saveTodos(); });
     row.appendChild(lb);
     row.appendChild(del);
     list.appendChild(row);
@@ -1443,6 +1498,7 @@ $('todoAdd').addEventListener('keydown', (e) => {
   state.todos.push({ text: v, done: false });
   e.target.value = '';
   saveTodos();
+  $('todoList').scrollTop = $('todoList').scrollHeight;
 });
 $('keySave').addEventListener('click', () => {
   const k = $('keyInput').value.trim();
