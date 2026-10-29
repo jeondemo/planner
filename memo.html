@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F3A5F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="메모 기록">
+<title>메모 기록</title>
+<link rel="icon" href="memo-icon.png">
+<link rel="apple-touch-icon" href="memo-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1F3A5F;--gold:#F2B84B;--memo:#FFF6D8;--memo-line:rgba(180,150,70,.25);--ink:#1B2430;--sub:#5A6573;--muted:#8E97A1;--line:#D5DBE2;--sun:#C9302C;--sat:#2F6FDE;--brown:#7A5A00}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:#FFFFFF;color:var(--ink);font-family:'Noto Sans KR',system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit}
+.app{max-width:520px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+.top{background:var(--navy);color:#FFFFFF;padding:calc(16px + env(safe-area-inset-top)) 16px 14px;display:flex;flex-direction:column;gap:12px;position:sticky;top:0;z-index:2}
+.t1{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.t1 h1{margin:0;font-size:20px;font-weight:700}
+.t1 button{height:32px;padding:0 12px;border-radius:16px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#FFFFFF;font-size:13px}
+.mon{display:flex;align-items:center;justify-content:space-between}
+.mon b{font-size:22px;font-weight:700}
+.mon button{width:40px;height:40px;border-radius:20px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#FFFFFF;font-size:20px;line-height:1}
+.tabs{display:flex;gap:6px}
+.tabs button{flex:1;height:36px;border-radius:18px;border:none;background:rgba(255,255,255,.1);color:#C9D6E6;font-size:14px}
+.tabs button.on{background:var(--gold);color:var(--ink);font-weight:700}
+.cal{padding:12px 12px 6px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));row-gap:4px;text-align:center}
+.cal .w{font-size:12px;color:var(--muted);padding-bottom:4px}
+.cal .w.su{color:var(--sun)}.cal .w.sa{color:var(--sat)}
+.cal button{height:44px;border:none;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:15px;border-radius:10px;color:var(--ink);padding:0}
+.cal button.o{color:#C5CBD2}
+.cal button.su{color:var(--sun)}.cal button.sa{color:var(--sat)}
+.cal button.o.su,.cal button.o.sa{opacity:.45}
+.cal button em{width:6px;height:6px;border-radius:3px;display:block;background:transparent}
+.cal button.has em{background:#E0A21B}
+.cal button.tdy{box-shadow:inset 0 0 0 2px var(--gold)}
+.cal button.sel{background:var(--navy);color:#FFFFFF}
+.cal button.sel em{background:var(--gold)}
+.cal button.sel.has em{background:var(--gold)}
+.day{margin:6px 12px calc(14px + env(safe-area-inset-bottom));flex:1;min-height:220px;border-radius:16px;background:var(--memo);box-shadow:inset 0 0 0 2px var(--gold);padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.day h2{margin:0;font-size:16px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.day h2 small{font-size:12px;color:#7A6A3F;font-weight:500}
+.lines{font-size:15px;line-height:28px;white-space:pre-wrap;overflow-wrap:anywhere;background:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,var(--memo-line) 27px,var(--memo-line) 28px);min-height:140px}
+.lines.empty{color:#9A8955}
+.day.editing{box-shadow:inset 0 0 0 2px var(--gold),0 0 0 4px rgba(242,184,75,.35)}
+.ta{flex:1;min-height:170px;width:100%;resize:none;border:none;outline:none;background:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,var(--memo-line) 27px,var(--memo-line) 28px);background-attachment:local;line-height:28px;font-size:16px;font-family:inherit;color:var(--ink);padding:0;border-radius:0}
+.ta::placeholder{color:#9A8955}
+.ta:disabled{opacity:.6}
+.ft{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:#6B5B30}
+.ft .pc{display:inline-flex;align-items:center;gap:5px}
+.ft .pc i{width:7px;height:7px;border-radius:4px;background:#2E9E5B}
+.ft.bad .pc i{background:#C9302C}
+.ft.bad{color:#8A1F1B}
+.list{flex:1;padding:12px 12px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
+.srch{position:relative}
+.srch input{width:100%;height:44px;border-radius:12px;border:1px solid var(--line);padding:0 40px 0 38px;font-size:16px;font-family:inherit;color:var(--ink);background:#FFFFFF}
+.srch input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(242,184,75,.25)}
+.srch svg{position:absolute;left:12px;top:14px;pointer-events:none}
+.srch .x{position:absolute;right:6px;top:6px;width:32px;height:32px;border:none;background:transparent;color:var(--muted);font-size:16px;border-radius:16px}
+.info{font-size:13px;color:var(--sub);padding:2px 2px}
+.grp{font-size:12px;font-weight:700;color:var(--sub);margin-top:6px}
+.it{border-radius:12px;background:#FFFBEA;border:1px solid #EFD999;padding:10px 12px;display:flex;flex-direction:column;gap:4px;text-align:left;width:100%;color:var(--ink)}
+.it b{font-size:13px;color:var(--brown)}
+.it p{margin:0;font-size:15px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+mark{background:rgba(242,184,75,.55);color:inherit;padding:0 2px;border-radius:3px}
+a.tel{color:#1E3F80;text-decoration:underline;text-underline-offset:2px}
+.empty-box{padding:30px 10px;text-align:center;color:var(--muted);font-size:14px}
+.err{margin:12px;padding:12px 14px;border-radius:12px;background:#FDECEC;color:#8A1F1B;font-size:14px}
+.keybox{margin:24px 16px;display:flex;flex-direction:column;gap:12px}
+.keybox h2{margin:0;font-size:18px}
+.keybox p{margin:0;font-size:14px;color:var(--sub);line-height:1.6}
+.keybox input{height:48px;border-radius:12px;border:1px solid var(--line);padding:0 14px;font-size:16px;font-family:inherit}
+.keybox button{height:48px;border-radius:12px;border:none;background:var(--navy);color:#FFFFFF;font-size:16px;font-weight:700}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.status{font-size:11px;color:#A9BCD3}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="t1">
+      <div><h1>✎ 메모 기록</h1><span class="status" id="status"></span></div>
+      <button type="button" id="reload">새로고침</button>
+    </div>
+    <div class="mon">
+      <button type="button" id="prev" aria-label="이전 달">‹</button>
+      <b id="monTitle"></b>
+      <button type="button" id="next" aria-label="다음 달">›</button>
+    </div>
+    <div class="tabs">
+      <button type="button" id="tabCal" class="on">달력</button>
+      <button type="button" id="tabList">목록</button>
+    </div>
+  </header>
+  <main id="main"></main>
+</div>
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbwf2YCDrjZ8IbvF-Syi1vV44aERHHhdpb5zH3pMiMga_tkg4qsexSnfBGsi6YA6NP7P/exec';
+const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
+const $ = (id) => document.getElementById(id);
+const pad = (n) => String(n).padStart(2, '0');
+const ymd = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const parseYmd = (s) => new Date(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10));
+const today = () => ymd(new Date());
+const now = new Date();
+const state = { y: now.getFullYear(), m: now.getMonth(), tab: 'cal', sel: today(), recs: [], map: {}, q: '', loading: false, error: '', key: '', dirty: false, editDate: '', saveMsg: '', saveBad: false, pendingRender: false };
+let saveTimer = null;
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+function readKey() {
+  const m = (location.hash + location.search).match(/key=([A-Za-z0-9]+)/);
+  if (m) { lsSet('planner_key', m[1]); history.replaceState(null, '', location.pathname); return m[1]; }
+  return lsGet('planner_key') || '';
+}
+
+function setRecs(recs) {
+  state.recs = recs;
+  state.map = {};
+  recs.forEach((r) => { state.map[r.date] = r; });
+}
+
+async function load() {
+  if (!state.key) { render(); return; }
+  state.loading = true;
+  $('status').textContent = '불러오는 중…';
+  try {
+    const res = await fetch(API_URL + '?' + new URLSearchParams({ action: 'memoList', key: state.key, _: Date.now() }), { cache: 'no-store' });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || '요청 실패');
+    const recs = data.records || [];
+    if (state.dirty && state.editDate) {
+      const local = $('ta') ? $('ta').value : '';
+      const rest = recs.filter((r) => r.date !== state.editDate);
+      if (local.trim()) rest.push({ date: state.editDate, text: local, at: (state.map[state.editDate] || {}).at || '' });
+      rest.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+      setRecs(rest);
+    } else {
+      setRecs(recs);
+    }
+    lsSet('memo_cache', JSON.stringify(state.recs));
+    state.error = '';
+    const t = new Date();
+    $('status').textContent = '기록 ' + state.recs.length + '일 · ' + pad(t.getHours()) + ':' + pad(t.getMinutes()) + ' 갱신';
+  } catch (e) {
+    if (e.message === 'unauthorized') {
+      state.key = '';
+      lsSet('planner_key', '');
+      state.error = 'API 키가 맞지 않습니다. 다시 입력해 주세요.';
+    } else {
+      state.error = '불러오기 실패: ' + e.message + (state.recs.length ? ' (저장된 기록을 보여줘요)' : '');
+    }
+    $('status').textContent = '';
+  }
+  state.loading = false;
+  render();
+}
+
+function appendRich(parent, text, q) {
+  const parts = text.split(/(0\d{1,2}-?\d{3,4}-?\d{4})/);
+  parts.forEach((part, i) => {
+    if (i % 2 === 1) {
+      const a = el('a', 'tel');
+      a.href = 'tel:' + part.replace(/-/g, '');
+      appendHL(a, part, q);
+      parent.appendChild(a);
+    } else {
+      appendHL(parent, part, q);
+    }
+  });
+}
+
+function appendHL(parent, text, q) {
+  if (!q) { parent.appendChild(document.createTextNode(text)); return; }
+  const lt = text.toLowerCase();
+  const lq = q.toLowerCase();
+  let i = 0;
+  while (i < text.length) {
+    const j = lt.indexOf(lq, i);
+    if (j < 0) { parent.appendChild(document.createTextNode(text.slice(i))); break; }
+    if (j > i) parent.appendChild(document.createTextNode(text.slice(i, j)));
+    parent.appendChild(el('mark', '', text.slice(j, j + q.length)));
+    i = j + q.length;
+  }
+}
+
+function matchLines(text, q) {
+  const lq = q.toLowerCase();
+  const lines = text.split('\n').filter((l) => l.toLowerCase().indexOf(lq) !== -1);
+  return lines.length ? lines.join('\n') : text;
+}
+
+function dayLabel(ds) {
+  const d = parseYmd(ds);
+  return d.getDate() + '일 (' + WEEK[d.getDay()] + ')';
+}
+
+function isTyping() { return document.activeElement && document.activeElement.id === 'ta'; }
+
+function render() {
+  if (isTyping() && state.tab === 'cal') { state.pendingRender = true; updateDots(); return; }
+  state.pendingRender = false;
+  $('monTitle').textContent = state.y + '년 ' + (state.m + 1) + '월';
+  $('tabCal').classList.toggle('on', state.tab === 'cal');
+  $('tabList').classList.toggle('on', state.tab === 'list');
+  const main = $('main');
+  main.replaceChildren();
+  if (!state.key) { renderKey(main); return; }
+  if (state.error) main.appendChild(el('div', 'err', state.error));
+  if (state.tab === 'cal') renderCal(main);
+  else renderList(main);
+}
+
+function renderKey(main) {
+  const box = el('div', 'keybox');
+  box.appendChild(el('h2', '', '처음 한 번만 API 키를 넣어 주세요'));
+  box.appendChild(el('p', '', '월간 계획표에 넣었던 API 키와 같아요. GAS 편집기의 setup 실행 로그에서 확인할 수 있어요.'));
+  if (state.error) box.appendChild(el('p', '', state.error));
+  const lb = el('label', 'sr', 'API 키');
+  lb.htmlFor = 'keyIn';
+  const inp = el('input');
+  inp.id = 'keyIn';
+  inp.placeholder = 'API 키';
+  inp.autocomplete = 'off';
+  const btn = el('button', '', '확인');
+  btn.type = 'button';
+  const go = () => {
+    const k = inp.value.trim();
+    if (!k) return;
+    state.key = k;
+    lsSet('planner_key', k);
+    state.error = '';
+    load();
+  };
+  btn.addEventListener('click', go);
+  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+  box.appendChild(lb);
+  box.appendChild(inp);
+  box.appendChild(btn);
+  main.appendChild(box);
+}
+
+function renderCal(main) {
+  const cal = el('div', 'cal');
+  WEEK.forEach((w, i) => cal.appendChild(el('div', 'w' + (i === 0 ? ' su' : i === 6 ? ' sa' : ''), w)));
+  const first = new Date(state.y, state.m, 1);
+  const start = new Date(state.y, state.m, 1 - first.getDay());
+  const days = new Date(state.y, state.m + 1, 0).getDate();
+  const cells = Math.ceil((first.getDay() + days) / 7) * 7;
+  const ts = today();
+  for (let i = 0; i < cells; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    const ds = ymd(d);
+    const b = el('button');
+    b.type = 'button';
+    b.appendChild(document.createTextNode(d.getDate()));
+    b.appendChild(el('em'));
+    b.dataset.ds = ds;
+    if (d.getMonth() !== state.m) b.classList.add('o');
+    if (d.getDay() === 0) b.classList.add('su');
+    if (d.getDay() === 6) b.classList.add('sa');
+    if (state.map[ds]) b.classList.add('has');
+    if (ds === ts) b.classList.add('tdy');
+    if (ds === state.sel) b.classList.add('sel');
+    b.setAttribute('aria-label', (d.getMonth() + 1) + '월 ' + d.getDate() + '일' + (state.map[ds] ? ' 메모 있음' : ''));
+    b.addEventListener('click', () => {
+      if (state.dirty) saveMemo();
+      if (isTyping()) document.activeElement.blur();
+      state.saveMsg = '';
+      state.saveBad = false;
+      state.sel = ds;
+      if (d.getMonth() !== state.m) { state.y = d.getFullYear(); state.m = d.getMonth(); }
+      render();
+    });
+    cal.appendChild(b);
+  }
+  main.appendChild(cal);
+  const day = el('section', 'day');
+  const sd = parseYmd(state.sel);
+  const h = el('h2', '', (sd.getMonth() + 1) + '월 ' + sd.getDate() + '일 (' + WEEK[sd.getDay()] + ')');
+  h.appendChild(el('small', '', '✎ 바로 쓰기'));
+  day.appendChild(h);
+  const rec = state.map[state.sel];
+  const lb = el('label', 'sr', '메모');
+  lb.htmlFor = 'ta';
+  const ta = el('textarea', 'ta');
+  ta.id = 'ta';
+  ta.maxLength = 2000;
+  ta.placeholder = '이 날 메모를 쓰세요 (자동 저장)';
+  ta.value = rec ? rec.text : '';
+  state.editDate = state.sel;
+  state.dirty = false;
+  ta.addEventListener('focus', () => day.classList.add('editing'));
+  ta.addEventListener('blur', () => {
+    day.classList.remove('editing');
+    if (state.dirty) saveMemo();
+    if (state.pendingRender) setTimeout(() => { if (!isTyping()) render(); }, 0);
+  });
+  ta.addEventListener('input', () => {
+    state.dirty = true;
+    setFoot('입력 중…', false);
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveMemo, 1200);
+  });
+  day.appendChild(lb);
+  day.appendChild(ta);
+  const ft = el('div', 'ft');
+  ft.id = 'ft';
+  const pc = el('span', 'pc');
+  pc.appendChild(el('i'));
+  pc.appendChild(el('span', '', ''));
+  ft.appendChild(pc);
+  ft.appendChild(el('span', '', ''));
+  day.appendChild(ft);
+  main.appendChild(day);
+  setFoot(state.saveMsg || (rec && rec.at ? '저장됨 · ' + rec.at : ''), state.saveBad);
+}
+
+function renderList(main) {
+  const list = el('div', 'list');
+  const sw = el('div', 'srch');
+  sw.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8E97A1" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>';
+  const lb = el('label', 'sr', '메모 찾기');
+  lb.htmlFor = 'q';
+  const inp = el('input');
+  inp.id = 'q';
+  inp.type = 'search';
+  inp.placeholder = '메모 찾기 (전체 기간)';
+  inp.value = state.q;
+  inp.autocomplete = 'off';
+  sw.appendChild(lb);
+  sw.appendChild(inp);
+  if (state.q) {
+    const x = el('button', 'x', '✕');
+    x.type = 'button';
+    x.setAttribute('aria-label', '검색어 지우기');
+    x.addEventListener('click', () => { state.q = ''; render(); });
+    sw.appendChild(x);
+  }
+  list.appendChild(sw);
+  const body = el('div');
+  body.style.display = 'flex';
+  body.style.flexDirection = 'column';
+  body.style.gap = '8px';
+  list.appendChild(body);
+  main.appendChild(list);
+  const fill = () => {
+    body.replaceChildren();
+    const q = state.q.trim();
+    let items;
+    if (q) {
+      items = state.recs.filter((r) => r.text.toLowerCase().indexOf(q.toLowerCase()) !== -1);
+      body.appendChild(el('div', 'info', '"' + q + '" 찾은 메모 ' + items.length + '건'));
+    } else {
+      const pre = state.y + '-' + pad(state.m + 1);
+      items = state.recs.filter((r) => r.date.slice(0, 7) === pre);
+      body.appendChild(el('div', 'info', (state.m + 1) + '월 메모 ' + items.length + '일'));
+    }
+    if (!items.length) {
+      body.appendChild(el('div', 'empty-box', q ? '찾는 단어가 들어간 메모가 없어요' : '이 달에는 메모가 없어요'));
+      return;
+    }
+    let cur = '';
+    items.forEach((r) => {
+      if (q) {
+        const ym = r.date.slice(0, 7);
+        if (ym !== cur) {
+          cur = ym;
+          body.appendChild(el('div', 'grp', (+ym.slice(0, 4)) + '년 ' + (+ym.slice(5, 7)) + '월'));
+        }
+      }
+      const it = el('div', 'it');
+      it.appendChild(el('b', '', dayLabel(r.date) + (r.at ? ' · ' + r.at : '')));
+      const p = el('p');
+      appendRich(p, q ? matchLines(r.text, q) : r.text, q);
+      it.appendChild(p);
+      it.addEventListener('click', (e) => {
+        if (e.target.closest('a')) return;
+        state.saveMsg = '';
+        state.saveBad = false;
+        state.sel = r.date;
+        state.y = +r.date.slice(0, 4);
+        state.m = +r.date.slice(5, 7) - 1;
+        state.tab = 'cal';
+        render();
+        window.scrollTo(0, 0);
+      });
+      body.appendChild(it);
+    });
+  };
+  inp.addEventListener('input', () => {
+    state.q = inp.value;
+    fill();
+  });
+  fill();
+}
+
+function setFoot(msg, bad) {
+  const ft = $('ft');
+  if (!ft) return;
+  ft.classList.toggle('bad', !!bad);
+  ft.firstChild.lastChild.textContent = bad ? '저장 실패' : 'PC 계획표와 연결됨';
+  ft.lastChild.textContent = msg;
+}
+
+function updateDots() {
+  document.querySelectorAll('.cal button[data-ds]').forEach((b) => {
+    b.classList.toggle('has', !!state.map[b.dataset.ds]);
+  });
+}
+
+async function saveMemo() {
+  clearTimeout(saveTimer);
+  const ta = $('ta');
+  const date = state.editDate;
+  if (!ta || !date || !state.key) return;
+  const text = ta.value;
+  state.dirty = false;
+  try {
+    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'setMemo', key: state.key, date: date, text: text }), keepalive: true });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || '요청 실패');
+    const rest = state.recs.filter((r) => r.date !== date);
+    if (text.trim()) rest.push({ date: date, text: text, at: data.savedAt });
+    rest.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    setRecs(rest);
+    lsSet('memo_cache', JSON.stringify(state.recs));
+    updateDots();
+    if (state.editDate === date) {
+      state.saveMsg = text.trim() ? '저장됨 · ' + data.savedAt : '지움 · ' + data.savedAt;
+      state.saveBad = false;
+      if (!state.dirty) setFoot(state.saveMsg, false);
+    }
+  } catch (e) {
+    if (state.editDate === date) {
+      state.dirty = true;
+      state.saveMsg = e.message === 'unauthorized' ? 'API 키 오류' : '인터넷 확인 후 다시 써 주세요';
+      state.saveBad = true;
+      setFoot(state.saveMsg, true);
+    }
+  }
+}
+
+function moveMonth(dir) {
+  if (state.dirty) saveMemo();
+  state.m += dir;
+  if (state.m < 0) { state.m = 11; state.y--; }
+  if (state.m > 11) { state.m = 0; state.y++; }
+  const ts = today();
+  state.sel = ts.slice(0, 7) === state.y + '-' + pad(state.m + 1) ? ts : state.y + '-' + pad(state.m + 1) + '-01';
+  render();
+}
+
+$('prev').addEventListener('click', () => moveMonth(-1));
+$('next').addEventListener('click', () => moveMonth(1));
+$('tabCal').addEventListener('click', () => { state.tab = 'cal'; render(); });
+$('tabList').addEventListener('click', () => {
+  if (state.dirty) saveMemo();
+  if (isTyping()) document.activeElement.blur();
+  state.tab = 'list';
+  render();
+});
+$('reload').addEventListener('click', () => { if (state.dirty) saveMemo(); load(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && state.dirty) saveMemo();
+  if (document.visibilityState === 'visible' && state.key && !state.dirty) load();
+});
+window.addEventListener('pagehide', () => { if (state.dirty) saveMemo(); });
+
+state.key = readKey();
+try {
+  const c = JSON.parse(lsGet('memo_cache') || '[]');
+  if (Array.isArray(c)) setRecs(c);
+} catch (e) {}
+render();
+load();
+</script>
+</body>
+</html>
