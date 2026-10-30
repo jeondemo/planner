@@ -34,6 +34,13 @@ button,input,textarea{font-family:inherit}
 .btn-icon:hover,.btn-ghost:hover{border-color:var(--muted)}
 .btn-ghost{height:44px;padding:0 18px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:15px;cursor:pointer}
 .legend{display:flex;gap:20px;font-size:15px;color:var(--sub);padding-bottom:6px}
+.tip{position:fixed;z-index:9999;max-width:380px;padding:8px 12px;border-radius:8px;background:#1F3A5F;color:#FFFFFF;font-size:14px;font-weight:500;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:0 6px 18px rgba(20,30,45,.28);pointer-events:none;display:none}
+.tip.show{display:block}
+.tip::after{content:'';position:absolute;left:var(--ax,50%);top:100%;margin-left:-6px;border:6px solid transparent;border-top-color:#1F3A5F}
+.tip.below::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:#1F3A5F}
+.tip.tipside{background:#FFF6D8;color:#3B2F12;border:2px solid #F2B84B;font-weight:600;box-shadow:0 8px 20px rgba(0,0,0,.3)}
+.tip.tipside::after{border-top-color:#F2B84B}
+.tip.tipside.below::after{border-top-color:transparent;border-bottom-color:#F2B84B}
 .ly-btn{white-space:nowrap;flex:none;height:44px;margin-left:10px;padding:0 16px;border-radius:22px;border:1px solid var(--line);background:#FFFFFF;color:var(--text);font-size:15px;font-weight:600;font-family:inherit;display:inline-flex;align-items:center;gap:8px;cursor:pointer}
 .ly-btn:hover{border-color:var(--muted)}
 .ly-btn i{width:14px;height:14px;border-radius:3px;border:2px dashed currentColor;display:inline-block}
@@ -586,7 +593,7 @@ async function loadLy() {
   $('lyDate').classList.toggle('on', ly.mode === 'date');
   if (!ly.cache[key]) {
     try {
-      const res = await api('list', { start: lyShift(ymd(g.start), -1), end: lyShift(ymd(g.end), -1) });
+      const res = await api('list', { start: lyShift(ymd(g.start), -1), end: lyShift(ymd(g.end), -1), all: '1' });
       ly.cache[key] = (res.events || []).filter((ev) => ev.cal !== 'holiday').map((ev) => {
         const s0 = ev.start.slice(0, 10);
         const e0 = lastDay(ev);
@@ -747,7 +754,7 @@ function renderGrid() {
       head.appendChild(num);
       if (hols.length) {
         const hn = el('span', 'hol-name', hols.join(', '));
-        hn.title = hols.join(', ');
+        hn.dataset.tip = hols.join(', ');
         head.appendChild(hn);
       }
       if (ds !== tStr && state.memoDays && state.memoDays.has(ds)) head.appendChild(el('span', 'memo-tag', '메모'));
@@ -780,7 +787,7 @@ function renderGrid() {
       bar.style.marginTop = (47 + b.lane * 28) + 'px';
       if (b.cont) bar.appendChild(document.createTextNode('◂ '));
       appendHL(bar, chipLabel(b.ev), q);
-      bar.title = b.ev.title;
+      bar.dataset.tip = b.ev.title;
       bar.addEventListener('click', (e) => { e.stopPropagation(); selectDay(b.ev.start.slice(0, 10)); });
       grid.appendChild(bar);
     });
@@ -802,7 +809,7 @@ function renderGrid() {
       else gb.style.marginTop = (44 + b.lane * 29) + 'px';
       gb.appendChild(el('b', '', '작년'));
       gb.appendChild(document.createTextNode(b.g.title));
-      gb.title = '작년: ' + b.g.title;
+      gb.dataset.tip = '작년: ' + b.g.title;
       const day = ymd(addDays(parseYmd(ws), b.c0));
       gb.addEventListener('click', (e) => { e.stopPropagation(); selectDay(day); });
       grid.appendChild(gb);
@@ -1284,7 +1291,7 @@ function renderTodos() {
       no.addEventListener('click', () => { clearTimeout(ckTimer); state.ckAsk = null; renderTodos(); });
       row.appendChild(yes);
       row.appendChild(no);
-      row.title = t.text;
+      row.dataset.tip = t.text;
       list.appendChild(row);
       return;
     }
@@ -1300,7 +1307,7 @@ function renderTodos() {
     });
     lb.appendChild(cb);
     lb.appendChild(el('span', '', t.text));
-    lb.title = t.text;
+    lb.dataset.tip = t.text;
     const del = el('button', 'del', '✕');
     del.type = 'button';
     del.setAttribute('aria-label', t.text + ' 삭제');
@@ -1694,6 +1701,67 @@ function tick() {
     else { renderGrid(); renderDay(); }
   }
 }
+
+const tipEl = document.createElement('div');
+tipEl.className = 'tip';
+tipEl.setAttribute('role', 'tooltip');
+let tipTimer = null;
+let tipFor = null;
+
+function tipTarget(node) {
+  for (let i = 0; node && node !== document.body && i < 5; i++, node = node.parentElement) {
+    if (node.nodeType !== 1) continue;
+    if (node.hasAttribute('title')) { node.dataset.tip = node.getAttribute('title'); node.removeAttribute('title'); }
+    const cs = getComputedStyle(node);
+    if (cs.textOverflow === 'ellipsis' && node.scrollWidth > node.clientWidth + 1) return node;
+    if (node.dataset.tip) {
+      const cut = [node].concat(Array.from(node.querySelectorAll('span'))).some((x) => getComputedStyle(x).textOverflow === 'ellipsis' && x.scrollWidth > x.clientWidth + 1);
+      if (cut) return node;
+    }
+  }
+  return null;
+}
+
+function hideTip() {
+  clearTimeout(tipTimer);
+  tipFor = null;
+  tipEl.classList.remove('show');
+}
+
+function showTip(node) {
+  const text = (node.dataset.tip || node.textContent || '').trim();
+  if (!text) return;
+  if (!tipEl.parentNode) document.body.appendChild(tipEl);
+  tipEl.textContent = text;
+  tipEl.classList.remove('below');
+  tipEl.classList.toggle('tipside', !!node.closest('.side'));
+  tipEl.style.left = '0px';
+  tipEl.style.top = '0px';
+  tipEl.classList.add('show');
+  const r = node.getBoundingClientRect();
+  const tw = tipEl.offsetWidth;
+  const th = tipEl.offsetHeight;
+  const cx = r.left + Math.min(r.width, 200) / 2;
+  let left = Math.max(8, Math.min(cx - tw / 2, window.innerWidth - tw - 8));
+  let top = r.top - th - 10;
+  if (top < 8) { top = r.bottom + 10; tipEl.classList.add('below'); }
+  tipEl.style.left = left + 'px';
+  tipEl.style.top = top + 'px';
+  tipEl.style.setProperty('--ax', Math.max(12, Math.min(tw - 12, cx - left)) + 'px');
+  tipEl.classList.add('show');
+}
+
+document.addEventListener('mouseover', (e) => {
+  const node = tipTarget(e.target);
+  if (node === tipFor) return;
+  hideTip();
+  if (!node) return;
+  tipFor = node;
+  tipTimer = setTimeout(() => { if (tipFor === node) showTip(node); }, 250);
+});
+document.addEventListener('mousedown', hideTip);
+document.addEventListener('scroll', hideTip, true);
+window.addEventListener('blur', hideTip);
 
 function focusSoon(input) {
     [30, 150, 400].forEach((ms) => setTimeout(() => {
