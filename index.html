@@ -125,6 +125,43 @@ body.lyback .ly-more{opacity:.6}
 .ck-row.ask .no{border:1px solid rgba(255,255,255,.35);background:transparent;color:#FFFFFF}
 .ck-add{height:26px;margin-top:2px;padding:0 2px;border:none;border-top:1px dashed rgba(255,255,255,.18);background:transparent;color:var(--p-text);font-size:12px;font-family:inherit;width:100%}
 .ck-add::placeholder{color:var(--p-muted)}
+.ck{position:relative}
+.ck-addrow{display:flex;align-items:center;gap:4px;border-top:1px dashed rgba(255,255,255,.18);margin-top:2px}
+.ck-addrow .ck-add{border-top:none;margin-top:0;flex:1;min-width:0}
+.ck-addrow:focus-within{border-top-color:var(--gold)}
+.ck-rbtn{height:22px;padding:0 7px;border-radius:11px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#C9D6E6;font-size:11px;font-family:inherit;white-space:nowrap;cursor:pointer;flex:none}
+.ck-rbtn:hover{border-color:#FFFFFF}
+.ck-rbtn.on{background:var(--gold);border-color:var(--gold);color:#1B2430;font-weight:700}
+.ck-rv{font-size:11px;font-weight:700;color:#1B2430;background:#C9D6E6;border:none;border-radius:9px;padding:1px 7px;margin-left:6px;letter-spacing:0;cursor:pointer;font-family:inherit}
+.ck-rv:hover{background:#FFFFFF}
+.ck-row .rtag{font-size:10px;font-weight:800;color:#1B2430;background:var(--gold);border-radius:4px;padding:1px 5px;flex:none}
+.ck-pop{position:absolute;z-index:60;right:0;top:calc(100% + 8px);width:300px;background:#FFFFFF;color:#1B2430;border-radius:14px;box-shadow:0 14px 34px rgba(0,0,0,.35);padding:12px 14px;flex-direction:column;gap:8px}
+.ck-pop h4{margin:0;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ck-pop h4 small{font-size:12px;color:#5A6573;font-weight:500}
+.ck-pop .mh{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14px}
+.ck-pop .mh button{width:28px;height:28px;border-radius:14px;border:1px solid #D5DBE2;background:#FFFFFF;color:#1B2430;cursor:pointer;font-size:14px}
+.ck-pop .g{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:13px;row-gap:2px}
+.ck-pop .g .w{color:#8E97A1;font-size:11px;height:18px;display:flex;align-items:center;justify-content:center}
+.ck-pop .g button{height:28px;border:none;background:transparent;border-radius:14px;font-size:13px;font-family:inherit;color:#1B2430;cursor:pointer}
+.ck-pop .g button:hover{background:#EEF2F7}
+.ck-pop .g button:disabled{color:#C5CBD2;cursor:default;background:transparent}
+.ck-pop .g .su{color:#C9302C}.ck-pop .g .sa{color:#2F6FDE}
+.ck-pop .g button.on{background:#1F3A5F;color:#FFFFFF;font-weight:700}
+.ck-pop .qk{display:flex;gap:5px;flex-wrap:wrap}
+.ck-pop .qk button{font-size:12px;padding:3px 9px;border-radius:12px;border:1px solid #D5DBE2;background:#FFFFFF;color:#1B2430;cursor:pointer;font-family:inherit}
+.ck-pop .qk button:hover{border-color:#5A6573}
+.ck-pop .ft{display:flex;justify-content:flex-end;gap:6px}
+.ck-pop .ft button{font-size:13px;padding:6px 12px;border-radius:8px;border:1px solid #D5DBE2;background:#FFFFFF;color:#1B2430;cursor:pointer;font-family:inherit}
+.ck-pop .ft .ok{background:#1F3A5F;color:#FFFFFF;border-color:#1F3A5F;font-weight:700}
+.ck-pop .ft .ok:disabled{opacity:.4;cursor:default}
+.ck-pop .rl{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto}
+.ck-pop .ri{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:10px;background:#F3F5F7;font-size:13px}
+.ck-pop .ri .d{font-size:12px;font-weight:700;color:#7A5A00;background:#FFF0C2;padding:2px 7px;border-radius:6px;white-space:nowrap;border:none;cursor:pointer;font-family:inherit}
+.ck-pop .ri .d:hover{background:#FFE08A}
+.ck-pop .ri span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ck-pop .ri .x{border:none;background:transparent;color:#8E97A1;font-size:13px;cursor:pointer;width:24px;height:24px;border-radius:6px}
+.ck-pop .ri .x:hover{color:#C9302C;background:#FFFFFF}
+.ck-pop .empty2{font-size:13px;color:#8E97A1;padding:6px 2px}
 .ck-add:focus{outline:none;border-top-color:var(--gold)}
 .clock{font-size:68px;font-weight:700;line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums}
 .date{font-size:18px;color:var(--p-sub)}
@@ -362,10 +399,14 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
         <span class="date" id="today"></span>
       </div>
       <div class="ck">
-        <div class="ck-h"><span>체크리스트</span><b id="ckCount"></b></div>
+        <div class="ck-h"><span>체크리스트<button type="button" class="ck-rv" id="ckRv" style="display:none"></button></span><b id="ckCount"></b></div>
         <div class="ck-list" id="todoList"></div>
-        <label class="sr" for="todoAdd">체크리스트 추가</label>
-        <input class="ck-add" id="todoAdd" placeholder="+ 추가 (Enter)" maxlength="100" autocomplete="off">
+        <div class="ck-addrow">
+          <label class="sr" for="todoAdd">체크리스트 추가</label>
+          <input class="ck-add" id="todoAdd" placeholder="+ 추가 (Enter)" maxlength="100" autocomplete="off">
+          <button type="button" class="ck-rbtn" id="ckRb">📅 예약</button>
+        </div>
+        <div class="ck-pop" id="ckPop" style="display:none"></div>
       </div>
     </div>
     <div class="card day-card" id="dayCard">
@@ -1271,10 +1312,16 @@ function renderTodos() {
   const list = $('todoList');
   list.replaceChildren();
   if (state.ckAsk && state.todos.indexOf(state.ckAsk) === -1) state.ckAsk = null;
-  const left = state.todos.length;
+  const ts = ymd(todayDate());
+  const shown = state.todos.filter((t) => !t.from || t.from <= ts);
+  const waiting = state.todos.filter((t) => t.from && t.from > ts);
+  shown.sort((a, b) => (a.from ? 0 : 1) - (b.from ? 0 : 1) || (a.from || '').localeCompare(b.from || ''));
+  $('ckRv').style.display = waiting.length ? '' : 'none';
+  $('ckRv').textContent = '예약 ' + waiting.length;
+  const left = shown.length;
   $('ckCount').textContent = left ? left + '개 남음' : '';
   if (!left) list.appendChild(el('span', 'ck-empty', '비어 있음'));
-  state.todos.forEach((t) => {
+  shown.forEach((t) => {
     if (state.ckAsk === t) {
       const row = el('div', 'ck-row ask');
       row.appendChild(el('span', 'q', '삭제할까요?'));
@@ -1306,6 +1353,7 @@ function renderTodos() {
       ckTimer = setTimeout(() => { if (state.ckAsk === t) { state.ckAsk = null; renderTodos(); } }, 5000);
     });
     lb.appendChild(cb);
+    if (t.from) lb.appendChild(el('span', 'rtag', '예약'));
     lb.appendChild(el('span', '', t.text));
     lb.dataset.tip = t.text;
     const del = el('button', 'del', '✕');
@@ -1316,6 +1364,151 @@ function renderTodos() {
     row.appendChild(del);
     list.appendChild(row);
   });
+}
+
+function ckCloseAll() {
+  state.ckPick = null;
+  $('ckPop').style.display = 'none';
+  $('ckPop').replaceChildren();
+}
+
+function ckSetBtn() {
+  const f = state.ckFrom;
+  $('ckRb').classList.toggle('on', !!f);
+  $('ckRb').textContent = f ? '📅 ' + (+f.slice(5, 7)) + '/' + (+f.slice(8, 10)) : '📅 예약';
+}
+
+function ckOpenPick(edit) {
+  const base = edit ? edit.from : state.ckFrom || ymd(addDays(todayDate(), 7));
+  const d = parseYmd(base);
+  state.ckPick = { y: d.getFullYear(), m: d.getMonth(), sel: edit ? edit.from : state.ckFrom || '', edit: edit || null };
+  ckRenderPick();
+}
+
+function ckRenderPick() {
+  const pk = state.ckPick;
+  const pop = $('ckPop');
+  pop.replaceChildren();
+  pop.style.display = 'flex';
+  const h = el('h4', '', pk.edit ? '예약 날짜 바꾸기' : '언제부터 보일까요?');
+  h.appendChild(el('small', '', '그날 아침에 나타나요'));
+  pop.appendChild(h);
+  const qk = el('div', 'qk');
+  const t = todayDate();
+  [['다음 주', addDays(t, 7)], ['다음 달', new Date(t.getFullYear(), t.getMonth() + 1, t.getDate())], ['3개월 뒤', new Date(t.getFullYear(), t.getMonth() + 3, t.getDate())]].forEach((q) => {
+    const b = el('button', '', q[0]);
+    b.type = 'button';
+    b.addEventListener('click', (e) => { e.stopPropagation(); pk.sel = ymd(q[1]); pk.y = q[1].getFullYear(); pk.m = q[1].getMonth(); ckRenderPick(); });
+    qk.appendChild(b);
+  });
+  pop.appendChild(qk);
+  const mh = el('div', 'mh');
+  const pv = el('button', '', '‹');
+  pv.type = 'button';
+  pv.setAttribute('aria-label', '이전 달');
+  pv.addEventListener('click', (e) => { e.stopPropagation(); pk.m--; if (pk.m < 0) { pk.m = 11; pk.y--; } ckRenderPick(); });
+  const nx = el('button', '', '›');
+  nx.type = 'button';
+  nx.setAttribute('aria-label', '다음 달');
+  nx.addEventListener('click', (e) => { e.stopPropagation(); pk.m++; if (pk.m > 11) { pk.m = 0; pk.y++; } ckRenderPick(); });
+  mh.appendChild(pv);
+  mh.appendChild(el('span', '', pk.y + '년 ' + (pk.m + 1) + '월'));
+  mh.appendChild(nx);
+  pop.appendChild(mh);
+  const g = el('div', 'g');
+  WEEK.forEach((w, i) => g.appendChild(el('span', 'w' + (i === 0 ? ' su' : i === 6 ? ' sa' : ''), w)));
+  const first = new Date(pk.y, pk.m, 1);
+  for (let i = 0; i < first.getDay(); i++) g.appendChild(el('span'));
+  const days = new Date(pk.y, pk.m + 1, 0).getDate();
+  const ts = ymd(t);
+  for (let dd = 1; dd <= days; dd++) {
+    const dt = new Date(pk.y, pk.m, dd);
+    const ds = ymd(dt);
+    const b = el('button', (dt.getDay() === 0 ? 'su' : dt.getDay() === 6 ? 'sa' : '') + (ds === pk.sel ? ' on' : ''), dd);
+    b.type = 'button';
+    b.disabled = ds <= ts;
+    b.addEventListener('click', (e) => { e.stopPropagation(); pk.sel = ds; ckRenderPick(); });
+    g.appendChild(b);
+  }
+  pop.appendChild(g);
+  const ft = el('div', 'ft');
+  const cancel = el('button', '', '취소');
+  cancel.type = 'button';
+  cancel.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!pk.edit) { state.ckFrom = ''; ckSetBtn(); }
+    ckCloseAll();
+  });
+  const ok = el('button', 'ok', pk.sel ? (+pk.sel.slice(5, 7)) + '월 ' + (+pk.sel.slice(8, 10)) + '일에 예약' : '날짜를 고르세요');
+  ok.type = 'button';
+  ok.disabled = !pk.sel;
+  ok.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!pk.sel) return;
+    if (pk.edit) {
+      pk.edit.from = pk.sel;
+      ckCloseAll();
+      saveTodos();
+      ckOpenList();
+      return;
+    }
+    state.ckFrom = pk.sel;
+    ckCloseAll();
+    const v = $('todoAdd').value.trim();
+    if (v) ckAdd(v);
+    else { ckSetBtn(); focusSoon($('todoAdd')); }
+  });
+  ft.appendChild(cancel);
+  ft.appendChild(ok);
+  pop.appendChild(ft);
+}
+
+function ckOpenList() {
+  state.ckPick = null;
+  const ts = ymd(todayDate());
+  const items = state.todos.filter((t) => t.from && t.from > ts).sort((a, b) => a.from.localeCompare(b.from));
+  const pop = $('ckPop');
+  pop.replaceChildren();
+  pop.style.display = 'flex';
+  const h = el('h4', '', '예약된 체크리스트');
+  h.appendChild(el('small', '', '날짜가 되면 나타나요'));
+  pop.appendChild(h);
+  const rl = el('div', 'rl');
+  if (!items.length) rl.appendChild(el('span', 'empty2', '예약된 항목이 없어요'));
+  items.forEach((t) => {
+    const ri = el('div', 'ri');
+    const d = el('button', 'd', t.from.slice(0, 4) + '.' + (+t.from.slice(5, 7)) + '.' + (+t.from.slice(8, 10)));
+    d.type = 'button';
+    d.setAttribute('aria-label', '날짜 바꾸기');
+    d.addEventListener('click', (e) => { e.stopPropagation(); ckOpenPick(t); });
+    const tx = el('span', '', t.text);
+    tx.dataset.tip = t.text;
+    const x = el('button', 'x', '✕');
+    x.type = 'button';
+    x.setAttribute('aria-label', t.text + ' 예약 지우기');
+    x.addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.todos.splice(state.todos.indexOf(t), 1);
+      saveTodos();
+      ckOpenList();
+    });
+    ri.appendChild(d);
+    ri.appendChild(tx);
+    ri.appendChild(x);
+    rl.appendChild(ri);
+  });
+  pop.appendChild(rl);
+}
+
+function ckAdd(v) {
+  const item = { text: v, done: false };
+  if (state.ckFrom) item.from = state.ckFrom;
+  state.todos.push(item);
+  state.ckFrom = '';
+  ckSetBtn();
+  $('todoAdd').value = '';
+  saveTodos();
+  if (!item.from) $('todoList').scrollTop = $('todoList').scrollHeight;
 }
 
 function renderFoot() {
@@ -1842,11 +2035,20 @@ $('todoAdd').addEventListener('keydown', (e) => {
   if (e.key !== 'Enter' || e.isComposing) return;
   const v = e.target.value.trim();
   if (!v) return;
-  state.todos.push({ text: v, done: false });
-  e.target.value = '';
-  saveTodos();
-  $('todoList').scrollTop = $('todoList').scrollHeight;
+  ckAdd(v);
 });
+$('ckRb').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (state.ckPick && !state.ckPick.edit) { ckCloseAll(); return; }
+  ckOpenPick(null);
+});
+$('ckRv').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if ($('ckPop').style.display !== 'none' && !state.ckPick) { ckCloseAll(); return; }
+  ckOpenList();
+});
+$('ckPop').addEventListener('click', (e) => e.stopPropagation());
+document.addEventListener('click', () => { if ($('ckPop').style.display !== 'none') ckCloseAll(); });
 $('keySave').addEventListener('click', () => {
   const k = $('keyInput').value.trim();
   if (!k) return;
