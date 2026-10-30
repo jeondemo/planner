@@ -48,6 +48,56 @@ button,input,textarea{font-family:inherit}
 .mp .ms button.sel{background:var(--navy);color:#FFFFFF;border-color:var(--navy)}
 .mp .ms button.sel small{color:#C9D6E6}
 .mp .ft{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#5A6573}
+.pr-btn{margin-left:8px;flex:none}
+.mp.pr{width:300px}
+.pr h4{margin:0;font-size:16px;font-weight:700}
+.pr .row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;color:#4A5562}
+.pr .seg{display:inline-flex;border:1px solid #D5DBE2;border-radius:10px;overflow:hidden}
+.pr .seg button{height:34px;padding:0 16px;border:none;background:#FFFFFF;color:#1B2430;font-size:14px;font-family:inherit;cursor:pointer}
+.pr .seg button.on{background:var(--navy);color:#FFFFFF;font-weight:600}
+.pr .note{font-size:12px;color:#5A6573;line-height:1.5}
+.pr .cals{display:flex;gap:6px}
+.pr .cals button{flex:1;height:34px;border-radius:10px;border:1px solid #D5DBE2;background:#FFFFFF;color:#8E97A1;font-size:14px;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:line-through}
+.pr .cals button i{width:4px;height:14px;border-radius:2px;display:inline-block;opacity:.4}
+.pr .cals button.on{color:#1B2430;border-color:#1F3A5F;background:#F4F7FB;font-weight:600;text-decoration:none}
+.pr .cals button.on i{opacity:1}
+.pr .cals button.on::before{content:'✓';font-size:12px;color:#1F3A5F}
+.pr .lbl{font-size:13px;color:#4A5562;font-weight:600}
+.pr .btns{display:flex;gap:8px}
+.pr .btns .go{flex:1}
+.pr .go.sub{background:#FFFFFF;color:#1F3A5F;border:1.5px solid #1F3A5F}
+.pr .go{height:42px;border-radius:12px;border:none;background:var(--navy);color:#FFFFFF;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+@media print{
+  html,body{height:auto!important;overflow:visible!important;background:#FFFFFF}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .app{display:block;height:auto;padding:0}
+  .side,.nav,.search,.ly-btn,.pr-btn,.ly-note,.tip,.mp,.backdrop,.mlabel .y::after{display:none!important}
+  .cal{width:var(--pw);height:var(--ph);padding-top:0;gap:8px}
+  .head{padding-bottom:8px}
+  .title h1{font-size:46px}
+  .mlabel .y{font-size:18px;background:transparent!important}
+  .legend{font-size:12px;gap:12px}
+  .week{font-size:11px}
+  .cell{padding:5px 6px!important;gap:2px!important;cursor:default}
+  .cell.today,.cell.sel{box-shadow:none!important;background:var(--card)!important}
+  .cell.out{background:var(--card2)!important}
+  .grid{overflow:hidden;gap:0;background:var(--card);border:1px solid #8E97A1}
+  .cell{border-right:1px solid #8E97A1;border-bottom:1px solid #8E97A1}
+  .more{font-size:10px}
+  .cell.today .num{background:transparent!important;width:auto!important;height:auto!important;font-size:15px!important;color:var(--text)}
+  .today-tag{display:none}
+  .dhead{height:22px!important}
+  .num{font-size:15px!important}
+  .chip{font-size:10.5px;height:18px!important;line-height:14px!important;padding:2px 5px;border-left-width:3px}
+  .chip.bar,.chip.ghost{margin-left:6px;margin-right:6px}
+  .chip.bar.cont,.chip.ghost.cont{margin-left:0}
+  .chip.bar.open,.chip.ghost.open{margin-right:0}
+  .cell .chip,.chip.bar,.cell .more{filter:none!important;opacity:1!important}
+  .chip.ghost{filter:none!important;opacity:1!important}
+  .hol-name{font-size:10px}
+  .memo-tag{display:none!important}
+  body.pr-no-school .lg-school,body.pr-no-personal .lg-personal,body.pr-no-pc .lg-pc{display:none!important}
+}
 .mp .ft button{font-size:13px;padding:6px 14px;border-radius:16px;border:1px solid #D5DBE2;background:#FFFFFF;color:#1B2430;cursor:pointer;font-family:inherit}
 .nav{display:flex;gap:6px;margin-left:12px;padding-bottom:2px}
 .btn-icon{width:44px;height:44px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -385,6 +435,7 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
   <section class="cal" aria-label="월간 달력">
     <div class="head">
       <div class="mp" id="mpPop" style="display:none" role="dialog" aria-label="연도·달 바로 가기"></div>
+      <div class="mp pr" id="prPop" style="display:none" role="dialog" aria-label="인쇄"></div>
       <div class="title">
         <h1 id="hMonth"></h1>
         <div class="mlabel"><span class="en" id="hEn"></span><button type="button" class="y" id="hYear" aria-label="연도·달 바로 가기"></button></div>
@@ -401,12 +452,13 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
           <button id="searchClear" type="button" aria-label="검색어 지우기">✕</button>
         </div>
         <button type="button" class="ly-btn" id="lyBtn" aria-pressed="false"><i></i>작년 일정<span class="st" id="lySt"></span></button>
+        <button type="button" class="mp-btn pr-btn" id="prBtn" aria-label="인쇄"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1F3A5F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2.5"/><path d="M7 14h10v6.5H7z" fill="#FFFFFF"/><circle cx="17" cy="12" r="1.1" fill="#F2B84B" stroke="none"/></svg></button>
       </div>
       <span class="ly-note" id="lyNote"><span id="lyLabel"></span><span class="ly-seg"><button type="button" id="lyWeek">요일 맞춤</button><button type="button" id="lyDate">같은 날짜</button></span></span>
       <div class="legend">
-        <span><i class="dot school"></i>학교</span>
-        <span><i class="dot personal"></i>개인</span>
-        <span><i class="dot pc"></i>PC만</span>
+        <span class="lg-school"><i class="dot school"></i>학교</span>
+        <span class="lg-personal"><i class="dot personal"></i>개인</span>
+        <span class="lg-pc"><i class="dot pc"></i>PC만</span>
         <span style="color:var(--hol);font-weight:600">공휴일</span>
       </div>
     </div>
@@ -831,6 +883,112 @@ function mpRender() {
   $('hYear').classList.add('on');
 }
 
+const PAPER = { A4: [297, 210], B4: [364, 257] };
+
+function prOpts() {
+  let o = null;
+  try { o = JSON.parse(localStorage.getItem('planner_print') || 'null'); } catch (e) {}
+  if (!o || !PAPER[o.size]) o = { size: 'A4', land: true };
+  if (!o.cals) o.cals = { school: true, personal: true, pc: true };
+  return o;
+}
+
+function prClose() {
+  $('prPop').style.display = 'none';
+  $('prBtn').classList.remove('on');
+  state.pr = null;
+}
+
+function prOpen() {
+  if (state.mp) mpClose();
+  state.pr = prOpts();
+  state.selAt = Date.now();
+  prRender();
+}
+
+function prRender() {
+  const o = state.pr;
+  const pop = $('prPop');
+  pop.replaceChildren();
+  pop.appendChild(el('h4', '', state.y + '년 ' + (state.m + 1) + '월 인쇄'));
+  const mk = (label, items, cur, set) => {
+    const row = el('div', 'row');
+    row.appendChild(el('span', '', label));
+    const seg = el('div', 'seg');
+    items.forEach((it) => {
+      const b = el('button', it[1] === cur ? 'on' : '', it[0]);
+      b.type = 'button';
+      b.addEventListener('click', (e) => { e.stopPropagation(); set(it[1]); prRender(); });
+      seg.appendChild(b);
+    });
+    row.appendChild(seg);
+    pop.appendChild(row);
+  };
+  mk('용지', [['A4', 'A4'], ['B4', 'B4']], o.size, (v) => { o.size = v; });
+  mk('방향', [['가로', true], ['세로', false]], o.land, (v) => { o.land = v; });
+  pop.appendChild(el('span', 'lbl', '포함할 일정'));
+  const cals = el('div', 'cals');
+  [['school', '학교', 'var(--school)'], ['personal', '개인', 'var(--personal)'], ['pc', 'PC만', 'var(--pc)']].forEach((c) => {
+    const b = el('button', o.cals[c[0]] ? 'on' : '');
+    b.type = 'button';
+    const dot = el('i');
+    dot.style.background = c[2];
+    b.appendChild(dot);
+    b.appendChild(document.createTextNode(c[1]));
+    b.setAttribute('aria-pressed', o.cals[c[0]] ? 'true' : 'false');
+    b.addEventListener('click', (e) => { e.stopPropagation(); o.cals[c[0]] = !o.cals[c[0]]; prRender(); });
+    cals.appendChild(b);
+  });
+  pop.appendChild(cals);
+  pop.appendChild(el('span', 'note', '달력 부분만 인쇄돼요. 공휴일은 항상 들어가요. PDF로 저장은 인쇄 창에서 대상을 "PDF로 저장"(또는 Microsoft Print to PDF)으로 고르면 파일로 저장돼요.'));
+  const btns = el('div', 'btns');
+  const pdf = el('button', 'go sub', 'PDF로 저장');
+  pdf.type = 'button';
+  pdf.addEventListener('click', (e) => { e.stopPropagation(); doPrint(true); });
+  const go = el('button', 'go', '인쇄하기');
+  go.type = 'button';
+  go.addEventListener('click', (e) => { e.stopPropagation(); doPrint(false); });
+  btns.appendChild(pdf);
+  btns.appendChild(go);
+  pop.appendChild(btns);
+  const head = document.querySelector('.head').getBoundingClientRect();
+  const a = $('prBtn').getBoundingClientRect();
+  pop.style.left = Math.max(0, a.right - head.left - 300) + 'px';
+  pop.style.top = (a.bottom - head.top + 10) + 'px';
+  pop.style.display = 'flex';
+  $('prBtn').classList.add('on');
+}
+
+function doPrint(asPdf) {
+  const o = state.pr || prOpts();
+  try { localStorage.setItem('planner_print', JSON.stringify(o)); } catch (e) {}
+  prClose();
+  const pp = PAPER[o.size];
+  const w = o.land ? pp[0] : pp[1];
+  const h = o.land ? pp[1] : pp[0];
+  let st = $('printPage');
+  if (!st) { st = document.createElement('style'); st.id = 'printPage'; document.head.appendChild(st); }
+  st.textContent = '@page{size:' + w + 'mm ' + h + 'mm;margin:8mm}:root{--pw:' + (w - 16) + 'mm;--ph:' + (h - 17) + 'mm}';
+  const gridPx = (h - 17) * 3.78 - 105;
+  state.printMax = (rows) => Math.max(1, Math.floor((gridPx / rows - 34) / 20));
+  const all = state.events;
+  state.events = all.filter((ev) => !(ev.cal in o.cals) || o.cals[ev.cal]);
+  ['school', 'personal', 'pc'].forEach((c) => document.body.classList.toggle('pr-no-' + c, !o.cals[c]));
+  const oldTitle = document.title;
+  if (asPdf) document.title = '월간계획표_' + state.y + '-' + pad(state.m + 1);
+  state.printing = true;
+  renderGrid();
+  hideTip();
+  setTimeout(() => {
+    try { window.print(); } catch (e) {}
+    state.printing = false;
+    state.events = all;
+    document.title = oldTitle;
+    ['school', 'personal', 'pc'].forEach((c) => document.body.classList.remove('pr-no-' + c));
+    renderGrid();
+  }, 60);
+}
+
 function isMulti(ev) {
   return ev.cal !== 'holiday' && lastDay(ev) > ev.start.slice(0, 10);
 }
@@ -860,7 +1018,7 @@ function renderGrid() {
   grid.style.gridTemplateRows = 'repeat(' + g.rows + ', minmax(0, 1fr))';
   grid.replaceChildren();
   const tStr = ymd(todayDate());
-  const maxChips = g.rows === 6 ? 2 : 3;
+  const maxChips = state.printing ? state.printMax(g.rows) : g.rows === 6 ? 2 : 3;
   const q = state.search ? state.search.q : '';
   for (let r = 0; r < g.rows; r++) {
     const ws = ymd(addDays(g.start, r * 7));
@@ -896,7 +1054,7 @@ function renderGrid() {
       const hiddenBars = dayBars.filter((b) => b.lane >= maxChips).length;
       if (shownLanes) {
         const sp = el('div', 'spacer');
-        sp.style.height = (shownLanes * 28 - 5) + 'px';
+        sp.style.height = (state.printing ? shownLanes * 20 - 2 : shownLanes * 28 - 5) + 'px';
         cell.appendChild(sp);
       }
       const slots = Math.max(0, maxChips - shownLanes);
@@ -915,7 +1073,7 @@ function renderGrid() {
       const bar = el('span', 'chip bar ' + b.ev.cal + (b.cont ? ' cont' : '') + (b.open ? ' open' : ''));
       bar.style.gridRow = String(r + 1);
       bar.style.gridColumn = (b.c0 + 1) + ' / span ' + (b.c1 - b.c0 + 1);
-      bar.style.marginTop = (47 + b.lane * 28) + 'px';
+      bar.style.marginTop = (state.printing ? 29 + b.lane * 20 : 47 + b.lane * 28) + 'px';
       if (b.cont) bar.appendChild(document.createTextNode('◂ '));
       appendHL(bar, chipLabel(b.ev), q);
       bar.dataset.tip = b.ev.title;
@@ -2063,9 +2221,12 @@ function focusSoon(input) {
 $('prev').addEventListener('click', () => { state.selAt = Date.now(); state.m--; if (state.m < 0) { state.m = 11; state.y--; } render(); load(); });
 $('next').addEventListener('click', () => { state.selAt = Date.now(); state.m++; if (state.m > 11) { state.m = 0; state.y++; } render(); load(); });
 $('lyBtn').addEventListener('click', cycleLy);
-$('mpBtn').addEventListener('click', (e) => { e.stopPropagation(); if (state.mp) mpClose(); else mpOpen(); });
+$('mpBtn').addEventListener('click', (e) => { e.stopPropagation(); if (state.pr) prClose(); if (state.mp) mpClose(); else mpOpen(); });
 $('hYear').addEventListener('click', (e) => { e.stopPropagation(); if (state.mp) mpClose(); else mpOpen(); });
 $('mpPop').addEventListener('click', (e) => e.stopPropagation());
+$('prBtn').addEventListener('click', (e) => { e.stopPropagation(); if (state.pr) prClose(); else prOpen(); });
+$('prPop').addEventListener('click', (e) => e.stopPropagation());
+document.addEventListener('click', () => { if (state.pr) prClose(); });
 document.addEventListener('click', () => { if (state.mp) mpClose(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && state.mp) mpClose(); });
 $('lyWeek').addEventListener('click', () => { state.ly.mode = 'week'; state.selAt = Date.now(); loadLy(); });
