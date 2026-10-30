@@ -28,7 +28,27 @@ button,input,textarea{font-family:inherit}
 .title h1{margin:0;font-size:72px;font-weight:700;line-height:.9;color:var(--navy)}
 .mlabel{display:flex;flex-direction:column;gap:2px;padding-bottom:2px}
 .mlabel .en{font-size:15px;font-weight:600;color:var(--muted);letter-spacing:2px}
-.mlabel .y{font-size:22px;font-weight:600}
+.mlabel .y{font-size:22px;font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border-radius:8px;padding:0 4px;margin-left:-4px;border:none;background:transparent;color:inherit;font-family:inherit;line-height:inherit}
+.mlabel .y::after{content:'▾';font-size:14px;color:#8E97A1}
+.mlabel .y:hover,.mlabel .y.on{background:#EEF2F7}
+.head{position:relative}
+.mp-btn{width:44px;height:44px;border-radius:22px;border:1px solid var(--line);background:var(--card);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.mp-btn:hover{border-color:var(--muted)}
+.mp-btn.on{border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,58,95,.15)}
+.mp{position:absolute;z-index:80;width:360px;background:#FFFFFF;border:1px solid #D5DBE2;border-radius:16px;box-shadow:0 18px 44px rgba(20,30,45,.22);padding:16px;flex-direction:column;gap:12px;color:#1B2430}
+.mp .yr{display:flex;align-items:center;justify-content:space-between}
+.mp .yr b{font-size:22px}
+.mp .yr button{width:36px;height:36px;border-radius:18px;border:1px solid #D5DBE2;background:#FFFFFF;color:#1B2430;font-size:18px;cursor:pointer}
+.mp .yr button:hover{border-color:#5A6573}
+.mp .ms{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mp .ms button{height:46px;border-radius:12px;border:1px solid #E3E8EE;background:#FFFFFF;color:#1B2430;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;line-height:1.2}
+.mp .ms button:hover{border-color:#5A6573}
+.mp .ms button small{font-size:10px;font-weight:600;color:#8E97A1;letter-spacing:1px}
+.mp .ms button.now{box-shadow:inset 0 0 0 2px var(--gold);background:#FFF8E6}
+.mp .ms button.sel{background:var(--navy);color:#FFFFFF;border-color:var(--navy)}
+.mp .ms button.sel small{color:#C9D6E6}
+.mp .ft{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#5A6573}
+.mp .ft button{font-size:13px;padding:6px 14px;border-radius:16px;border:1px solid #D5DBE2;background:#FFFFFF;color:#1B2430;cursor:pointer;font-family:inherit}
 .nav{display:flex;gap:6px;margin-left:12px;padding-bottom:2px}
 .btn-icon{width:44px;height:44px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .btn-icon:hover,.btn-ghost:hover{border-color:var(--muted)}
@@ -364,10 +384,12 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
 <div class="app">
   <section class="cal" aria-label="월간 달력">
     <div class="head">
+      <div class="mp" id="mpPop" style="display:none" role="dialog" aria-label="연도·달 바로 가기"></div>
       <div class="title">
         <h1 id="hMonth"></h1>
-        <div class="mlabel"><span class="en" id="hEn"></span><span class="y" id="hYear"></span></div>
+        <div class="mlabel"><span class="en" id="hEn"></span><button type="button" class="y" id="hYear" aria-label="연도·달 바로 가기"></button></div>
         <div class="nav">
+          <button type="button" class="mp-btn" id="mpBtn" aria-label="연도·달 바로 가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1F3A5F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.4" fill="#F2B84B" stroke="none"/></svg></button>
           <button class="btn-icon" id="prev" aria-label="이전 달">‹</button>
           <button class="btn-icon" id="next" aria-label="다음 달">›</button>
           <button class="btn-ghost" id="goToday">오늘</button>
@@ -544,7 +566,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbwf2YCDrjZ8IbvF-Syi1vV4
 const EN_MONTH = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const WEEK = ['일','월','화','수','목','금','토'];
 const REFRESH_MS = 5 * 60 * 1000;
-const SEL_RESET_MS = 60 * 1000;
+const SEL_RESET_MS = 10 * 60 * 1000;
 const PARAMS = new URLSearchParams(location.search);
 const WALLPAPER = PARAMS.get('mode') === 'wallpaper';
 const POPUP = PARAMS.get('popup') || '';
@@ -739,6 +761,74 @@ function renderHeader() {
   $('hYear').textContent = state.y + '년 ' + (state.m + 1) + '월';
   $('hMonth').textContent = state.m + 1;
   $('hEn').textContent = EN_MONTH[state.m].toUpperCase();
+}
+
+function mpClose() {
+  state.mp = null;
+  $('mpPop').style.display = 'none';
+  $('mpBtn').classList.remove('on');
+  $('hYear').classList.remove('on');
+}
+
+function mpOpen() {
+  state.mp = { y: state.y };
+  state.selAt = Date.now();
+  mpRender();
+}
+
+function mpGo(y, m) {
+  mpClose();
+  state.y = y;
+  state.m = m;
+  state.selAt = Date.now();
+  render();
+  load();
+}
+
+function mpRender() {
+  const mp = state.mp;
+  const pop = $('mpPop');
+  pop.replaceChildren();
+  const yr = el('div', 'yr');
+  const pv = el('button', '', '‹');
+  pv.type = 'button';
+  pv.setAttribute('aria-label', '이전 해');
+  pv.addEventListener('click', (e) => { e.stopPropagation(); mp.y--; mpRender(); });
+  const nx = el('button', '', '›');
+  nx.type = 'button';
+  nx.setAttribute('aria-label', '다음 해');
+  nx.addEventListener('click', (e) => { e.stopPropagation(); mp.y++; mpRender(); });
+  yr.appendChild(pv);
+  yr.appendChild(el('b', '', mp.y + '년'));
+  yr.appendChild(nx);
+  pop.appendChild(yr);
+  const ms = el('div', 'ms');
+  const t = todayDate();
+  for (let i = 0; i < 12; i++) {
+    const b = el('button');
+    b.type = 'button';
+    b.appendChild(document.createTextNode((i + 1) + '월'));
+    b.appendChild(el('small', '', EN_MONTH[i].slice(0, 3).toUpperCase()));
+    if (mp.y === state.y && i === state.m) b.classList.add('sel');
+    if (mp.y === t.getFullYear() && i === t.getMonth()) b.classList.add('now');
+    b.addEventListener('click', (e) => { e.stopPropagation(); mpGo(mp.y, i); });
+    ms.appendChild(b);
+  }
+  pop.appendChild(ms);
+  const ft = el('div', 'ft');
+  ft.appendChild(el('span', '', '노란 테두리 = 이번 달'));
+  const tb = el('button', '', '오늘로');
+  tb.type = 'button';
+  tb.addEventListener('click', (e) => { e.stopPropagation(); mpGo(t.getFullYear(), t.getMonth()); });
+  ft.appendChild(tb);
+  pop.appendChild(ft);
+  const head = document.querySelector('.head').getBoundingClientRect();
+  const a = $('mpBtn').getBoundingClientRect();
+  pop.style.left = (a.left - head.left) + 'px';
+  pop.style.top = (a.bottom - head.top + 10) + 'px';
+  pop.style.display = 'flex';
+  $('mpBtn').classList.add('on');
+  $('hYear').classList.add('on');
 }
 
 function isMulti(ev) {
@@ -1882,7 +1972,9 @@ function tick() {
   if (state.dayKey && state.dayKey !== k) { state.y = d.getFullYear(); state.m = d.getMonth(); state.sel = ''; load(); }
   state.dayKey = k;
   const typing = [$('searchInput'), $('memoFindInput')].indexOf(document.activeElement) !== -1;
-  if ((state.sel || state.reorder || state.search || state.memoMode || state.ly.on) && !state.modal && !typing && Date.now() - state.selAt > SEL_RESET_MS) {
+  const away = state.y !== d.getFullYear() || state.m !== d.getMonth();
+  if ((state.sel || state.reorder || state.search || state.memoMode || state.ly.on || away) && !state.modal && !typing && Date.now() - state.selAt > SEL_RESET_MS) {
+    if (state.mp) mpClose();
     state.sel = '';
     if (state.ly.on) { state.ly.on = false; state.ly.back = false; document.body.classList.remove('lyon', 'lyback'); $('lyBtn').classList.remove('on'); $('lyBtn').setAttribute('aria-pressed', 'false'); $('lySt').textContent = ''; }
     state.reorder = false;
@@ -1971,9 +2063,14 @@ function focusSoon(input) {
 $('prev').addEventListener('click', () => { state.selAt = Date.now(); state.m--; if (state.m < 0) { state.m = 11; state.y--; } render(); load(); });
 $('next').addEventListener('click', () => { state.selAt = Date.now(); state.m++; if (state.m > 11) { state.m = 0; state.y++; } render(); load(); });
 $('lyBtn').addEventListener('click', cycleLy);
+$('mpBtn').addEventListener('click', (e) => { e.stopPropagation(); if (state.mp) mpClose(); else mpOpen(); });
+$('hYear').addEventListener('click', (e) => { e.stopPropagation(); if (state.mp) mpClose(); else mpOpen(); });
+$('mpPop').addEventListener('click', (e) => e.stopPropagation());
+document.addEventListener('click', () => { if (state.mp) mpClose(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && state.mp) mpClose(); });
 $('lyWeek').addEventListener('click', () => { state.ly.mode = 'week'; state.selAt = Date.now(); loadLy(); });
 $('lyDate').addEventListener('click', () => { state.ly.mode = 'date'; state.selAt = Date.now(); loadLy(); });
-$('goToday').addEventListener('click', () => { const t = todayDate(); state.y = t.getFullYear(); state.m = t.getMonth(); render(); load(); });
+$('goToday').addEventListener('click', () => { if (state.mp) mpClose(); const t = todayDate(); state.y = t.getFullYear(); state.m = t.getMonth(); render(); load(); });
 $('refresh').addEventListener('click', () => location.reload());
 $('dayBack').addEventListener('click', () => selectDay(ymd(todayDate())));
 $('searchInput').addEventListener('keydown', (e) => {
