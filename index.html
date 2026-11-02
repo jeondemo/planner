@@ -134,23 +134,29 @@ button,input,textarea{font-family:inherit}
 .bd-btn.on{background:var(--gold);border-color:var(--gold);color:#1B2430}
 .cork{background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.08) 0 2px,transparent 3px) 0 0/14px 14px,radial-gradient(circle at 70% 60%,rgba(0,0,0,.12) 0 2px,transparent 3px) 0 0/18px 18px,#B98A55;border-radius:12px;padding:16px 12px 6px;box-shadow:inset 0 0 0 6px #8E6436,inset 0 0 18px rgba(0,0,0,.35);max-height:340px;overflow-y:auto;scrollbar-width:thin}
 .notes{display:flex;gap:12px;align-items:flex-start}
-.notes .col{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px;padding-bottom:10px}
+.notes .col{flex:1;min-width:0;display:flex;flex-direction:column;gap:18px;padding:0 3px 12px}
 .cork .ck-empty{display:block;text-align:center;color:#FFF3DA;font-size:13px;padding:10px 0 14px;text-shadow:0 1px 2px rgba(0,0,0,.35)}
-.note{position:relative;padding:18px 12px 12px;min-height:76px;color:#2B2410;font-size:14px;line-height:1.45;background:linear-gradient(165deg,var(--c) 0%,var(--c) 75%,var(--c2) 100%);box-shadow:2px 6px 8px rgba(0,0,0,.35);display:flex;gap:8px;align-items:flex-start}
+.note{position:relative;padding:16px 22px 14px 11px;min-height:64px;color:#2B2410;font-size:12px;font-weight:500;line-height:1.5;
+  border-radius:2px 2px 26px 2px/2px 2px 7px 2px;
+  background:radial-gradient(120% 70% at 100% 100%,var(--c2) 0%,rgba(255,255,255,0) 55%),linear-gradient(175deg,var(--c) 0%,var(--c) 80%,var(--c2) 100%);
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.2)) drop-shadow(2px 6px 6px rgba(0,0,0,.3));
+  transform:rotate(var(--rot,0deg));transition:transform .15s;display:flex;gap:6px;align-items:flex-start}
+.note::after{content:'';position:absolute;right:3px;bottom:2px;width:46%;height:10px;border-radius:0 0 22px 0;background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.18) 100%);pointer-events:none}
+.note:not(.draft):hover{transform:rotate(0deg) translateY(-2px)}
 .note::before{content:'';position:absolute;top:-6px;left:50%;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FF8A80,#C62828 60%,#7F0000);box-shadow:1px 3px 3px rgba(0,0,0,.45)}
 .note input[type=checkbox]{margin:2px 0 0;width:15px;height:15px;accent-color:#7A5A00;flex:none;cursor:pointer}
-.note .tx{flex:1;min-width:0;overflow-wrap:anywhere;white-space:pre-wrap}
-.note .x{position:absolute;top:4px;right:5px;width:22px;height:22px;border:none;background:transparent;color:rgba(43,36,16,.45);font-size:12px;cursor:pointer;border-radius:6px;padding:0}
+.note .tx{flex:1;min-width:0;overflow-wrap:anywhere;word-break:keep-all;white-space:pre-wrap}
+.note .x{position:absolute;top:3px;right:3px;width:20px;height:20px;border:none;background:transparent;color:rgba(43,36,16,.45);font-size:12px;cursor:pointer;border-radius:6px;padding:0}
 .note .x:hover{color:#C9302C;background:rgba(255,255,255,.45)}
 .note .rtag{display:inline-block;font-size:10px;font-weight:800;background:#1B2430;color:#FFE873;border-radius:3px;padding:0 5px;margin-right:4px;vertical-align:1px;flex:none}
 .note.ask{flex-direction:column;align-items:stretch;gap:8px}
-.note.ask .q{font-size:13px;font-weight:700}
+.note.ask .q{font-size:12px;font-weight:700}
 .note.ask .bt2{display:flex;gap:6px}
 .note.ask .bt2 button{flex:1;height:26px;border-radius:13px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
 .note.ask .yes{border:none;background:#1B2430;color:#FFFFFF}
 .note.ask .no{border:1px solid rgba(43,36,16,.35);background:transparent;color:#2B2410}
-.note.draft{--c:#FFFDF0;--c2:#F3EBC8;flex-direction:column;gap:4px}
-.note.draft textarea{width:100%;border:none;background:transparent;resize:none;font-size:14px;line-height:1.45;color:#2B2410;font-family:inherit;outline:none;padding:0}
+.note.draft{--c:#FFFDF0;--c2:#EDE3BC;--rot:-.6deg;flex-direction:column;gap:4px}
+.note.draft textarea{width:100%;border:none;background:transparent;resize:none;font-size:12px;line-height:1.45;color:#2B2410;font-family:inherit;outline:none;padding:0}
 .note.draft textarea::placeholder{color:#9A8955}
 .board .ck-pop{top:34px}
 body.lyon .ly-note{display:inline-flex}
@@ -1602,12 +1608,20 @@ function renderDday() {
 
 let ckTimer = null;
 
-const NOTE_COLORS = [['#FFE873', '#F2D24E'], ['#FFC6D3', '#F4A8B9'], ['#C8F0D0', '#A9DDB4'], ['#C9E4FF', '#A9CCF0'], ['#FFD8A8', '#F5BF80']];
+const NOTE_COLORS = [['#FFE873', '#EBCB3F'], ['#FFC6D3', '#EE9DB0'], ['#C8F0D0', '#9AD3A8'], ['#C9E4FF', '#9CC4EE'], ['#FFD8A8', '#F0B272']];
 
 function noteColor(text) {
   let h = 0;
   for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) >>> 0;
   return NOTE_COLORS[h % NOTE_COLORS.length];
+}
+
+function noteTilt(text, idx) {
+  let h = 7;
+  for (let i = 0; i < text.length; i++) h = (h * 17 + text.charCodeAt(i) * 13) >>> 0;
+  const mags = [0.5, 0.8, 1.1, 1.4, 1.7];
+  const sign = (idx + Math.floor(idx / 2)) % 2 === 0 ? -1 : 1;
+  return sign * mags[h % mags.length];
 }
 
 function renderTodos() {
@@ -1644,16 +1658,6 @@ function renderTodos() {
       note.appendChild(bt);
     } else {
       note = el('div', 'note');
-      const cb = el('input');
-      cb.type = 'checkbox';
-      cb.setAttribute('aria-label', t.text + ' 완료');
-      cb.addEventListener('change', () => {
-        clearTimeout(ckTimer);
-        state.ckAsk = t;
-        renderTodos();
-        ckTimer = setTimeout(() => { if (state.ckAsk === t) { state.ckAsk = null; renderTodos(); } }, 5000);
-      });
-      note.appendChild(cb);
       const tx = el('span', 'tx');
       if (t.from) tx.appendChild(el('span', 'rtag', '예약'));
       tx.appendChild(document.createTextNode(t.text));
@@ -1661,11 +1665,17 @@ function renderTodos() {
       const del = el('button', 'x', '✕');
       del.type = 'button';
       del.setAttribute('aria-label', t.text + ' 떼기');
-      del.addEventListener('click', () => { state.todos.splice(state.todos.indexOf(t), 1); saveTodos(); });
+      del.addEventListener('click', () => {
+        clearTimeout(ckTimer);
+        state.ckAsk = t;
+        renderTodos();
+        ckTimer = setTimeout(() => { if (state.ckAsk === t) { state.ckAsk = null; renderTodos(); } }, 5000);
+      });
       note.appendChild(del);
     }
     note.style.setProperty('--c', c[0]);
     note.style.setProperty('--c2', c[1]);
+    note.style.setProperty('--rot', noteTilt(t.text, idx) + 'deg');
     cols[idx % 2].appendChild(note);
   });
   if (state.ckDrafting) {
