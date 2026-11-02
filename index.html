@@ -151,6 +151,18 @@ button,input,textarea{font-family:inherit}
 .note .rtag{display:inline-block;font-size:10px;font-weight:800;background:#1B2430;color:#FFE873;border-radius:3px;padding:0 5px;margin-right:4px;vertical-align:1px;flex:none}
 .note.ask{flex-direction:column;align-items:stretch;gap:8px}
 .note.ask .q{font-size:12px;font-weight:700}
+.note.ask .pv{font-size:12px;opacity:.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all}
+.note .bt3{display:flex;gap:5px}
+.note .bt3 button{flex:1;height:28px;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:0 4px;white-space:nowrap}
+.note .bt3 .ed{border:none;background:#1F3A5F;color:#FFFFFF}
+.note .bt3 .del{border:none;background:#C9302C;color:#FFFFFF}
+.note .bt3 .no{border:1px solid rgba(43,36,16,.35);background:transparent;color:#2B2410}
+.note.editing{flex-direction:column;align-items:stretch;gap:6px;box-shadow:none;outline:2px solid #1F3A5F;outline-offset:2px;transform:none!important}
+.note.editing .bt2{display:flex;gap:6px}
+.note.editing .bt2 button{flex:1;height:26px;border-radius:13px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.note.editing .yes{border:none;background:#1F3A5F;color:#FFFFFF}
+.note.editing .no{border:1px solid rgba(43,36,16,.35);background:transparent;color:#2B2410}
+.note.editing textarea{width:100%;border:none;background:rgba(255,255,255,.45);border-radius:4px;resize:none;font-size:12px;line-height:1.5;color:#2B2410;font-family:inherit;outline:none;padding:4px 6px}
 .note.ask .bt2{display:flex;gap:6px}
 .note.ask .bt2 button{flex:1;height:26px;border-radius:13px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
 .note.ask .yes{border:none;background:#1B2430;color:#FFFFFF}
@@ -1626,6 +1638,8 @@ function noteTilt(text, idx) {
 
 function renderTodos() {
   if (state.ckDrafting && document.activeElement === $('todoAdd')) { state.ckPending = true; ckCounts(); return; }
+  if (state.ckEdit && document.activeElement && document.activeElement.id === 'ckEditTa') { ckCounts(); return; }
+  if (state.ckEdit && state.todos.indexOf(state.ckEdit) === -1) state.ckEdit = null;
   state.ckPending = false;
   const list = $('todoList');
   list.replaceChildren();
@@ -1638,23 +1652,54 @@ function renderTodos() {
   shown.forEach((t, idx) => {
     const c = noteColor(t.text);
     let note;
-    if (state.ckAsk === t) {
-      note = el('div', 'note ask');
-      note.appendChild(el('span', 'q', '삭제할까요?'));
-      const bt = el('div', 'bt2');
-      const yes = el('button', 'yes', '네');
-      yes.type = 'button';
-      yes.addEventListener('click', () => {
-        clearTimeout(ckTimer);
-        state.ckAsk = null;
-        state.todos.splice(state.todos.indexOf(t), 1);
-        saveTodos();
+    if (state.ckEdit === t) {
+      note = el('div', 'note editing');
+      if (t.from) note.appendChild(el('span', 'rtag', '예약'));
+      const ta = el('textarea');
+      ta.id = 'ckEditTa';
+      ta.rows = 3;
+      ta.maxLength = 100;
+      ta.value = t.text;
+      ta.setAttribute('aria-label', '포스트잇 고치기');
+      const finish = (save) => {
+        if (state.ckEdit !== t) return;
+        const v = ta.value.trim();
+        state.ckEdit = null;
+        if (save && v && v !== t.text) { t.text = v; saveTodos(); } else renderTodos();
+      };
+      ta.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+        else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); finish(true); }
       });
-      const no = el('button', 'no', '아니요');
+      ta.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== ta) finish(true); }, 150));
+      note.appendChild(ta);
+      const bt = el('div', 'bt2');
+      const ok = el('button', 'yes', '저장');
+      ok.type = 'button';
+      ok.addEventListener('mousedown', (e) => e.preventDefault());
+      ok.addEventListener('click', () => finish(true));
+      const no = el('button', 'no', '취소');
       no.type = 'button';
-      no.addEventListener('click', () => { clearTimeout(ckTimer); state.ckAsk = null; renderTodos(); });
-      bt.appendChild(yes);
+      no.addEventListener('mousedown', (e) => e.preventDefault());
+      no.addEventListener('click', () => finish(false));
+      bt.appendChild(ok);
       bt.appendChild(no);
+      note.appendChild(bt);
+      setTimeout(() => focusSoon(ta), 0);
+    } else if (state.ckAsk === t) {
+      note = el('div', 'note ask');
+      const bt = el('div', 'bt3');
+      const mk = (label, cls, fn) => {
+        const b = el('button', cls, label);
+        b.type = 'button';
+        b.addEventListener('click', (e) => { e.stopPropagation(); clearTimeout(ckTimer); fn(); });
+        bt.appendChild(b);
+      };
+      mk('✎ 수정', 'ed', () => { state.ckAsk = null; state.ckEdit = t; renderTodos(); });
+      mk('🗑 삭제', 'del', () => { state.ckAsk = null; state.todos.splice(state.todos.indexOf(t), 1); saveTodos(); });
+      mk('취소', 'no', () => { state.ckAsk = null; renderTodos(); });
+      const prev = el('span', 'pv', t.text);
+      note.appendChild(prev);
       note.appendChild(bt);
     } else {
       note = el('div', 'note');
