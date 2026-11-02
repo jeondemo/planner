@@ -71,7 +71,8 @@ button,input,textarea{font-family:inherit}
   html,body{height:auto!important;overflow:visible!important;background:#FFFFFF}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .app{display:block;height:auto;padding:0}
-  .side,.nav,.search,.ly-btn,.pr-btn,.ly-note,.tip,.mp,.backdrop,.mlabel .y::after{display:none!important}
+  .side,.nav,.search,.ly-btn,.pr-btn,.ly-note,.tip,.mp,.backdrop,.mlabel .y::after,.hclock .clock,.hclock .date{display:none!important}
+  .hclock .legend{display:flex!important;font-size:12px}
   .cal{width:var(--pw);height:var(--ph);padding-top:0;gap:8px}
   .head{padding-bottom:8px}
   .title h1{font-size:46px}
@@ -115,9 +116,48 @@ button,input,textarea{font-family:inherit}
 .ly-btn:hover{border-color:var(--muted)}
 .ly-btn i{width:14px;height:14px;border-radius:3px;border:2px dashed currentColor;display:inline-block}
 .ly-btn.on{background:#E2F200;border-color:#9AA800;color:#1B2430;box-shadow:0 0 0 4px rgba(226,242,0,.35)}
-.ly-note{white-space:nowrap;display:none;align-items:center;gap:10px;font-size:13px;color:#6B7400;font-weight:700;padding-bottom:6px}
+.ly-note{white-space:nowrap;display:none;align-items:center;gap:8px;font-size:12px;color:#6B7400;font-weight:700}
+.hclock{display:flex;align-items:flex-end;gap:14px;padding-bottom:2px;flex:none}
+.hclock .clock{font-size:54px;font-weight:700;line-height:.9;color:var(--navy);letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.hclock .hd{display:flex;flex-direction:column;gap:5px;padding-bottom:2px}
+.hclock .date{font-size:15px;font-weight:600;color:var(--sub);white-space:nowrap}
+.hclock .legend{display:flex;gap:10px;font-size:12px;color:var(--muted);white-space:nowrap;padding-bottom:0}
+.hclock .legend span{display:inline-flex;align-items:center;gap:4px}
+.hclock .legend .dot{width:3px!important;height:11px!important}
+.board{flex-shrink:0;position:relative;display:flex;flex-direction:column;gap:8px}
+.board-h{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;letter-spacing:1px;color:var(--p-muted)}
+.board-h .bt{margin-right:2px}
+.board-h .ck-rv{margin-left:0}
+.board-h b{margin-left:auto;font-size:12px;color:var(--gold);letter-spacing:0}
+.bd-btn{height:24px;padding:0 9px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#C9D6E6;font-size:12px;font-weight:600;letter-spacing:0;font-family:inherit;cursor:pointer;white-space:nowrap}
+.bd-btn:hover{border-color:#FFFFFF;color:#FFFFFF}
+.bd-btn.on{background:var(--gold);border-color:var(--gold);color:#1B2430}
+.cork{background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.08) 0 2px,transparent 3px) 0 0/14px 14px,radial-gradient(circle at 70% 60%,rgba(0,0,0,.12) 0 2px,transparent 3px) 0 0/18px 18px,#B98A55;border-radius:12px;padding:16px 12px 6px;box-shadow:inset 0 0 0 6px #8E6436,inset 0 0 18px rgba(0,0,0,.35);max-height:340px;overflow-y:auto;scrollbar-width:thin}
+.notes{display:flex;gap:12px;align-items:flex-start}
+.notes .col{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px;padding-bottom:10px}
+.cork .ck-empty{display:block;text-align:center;color:#FFF3DA;font-size:13px;padding:10px 0 14px;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.note{position:relative;padding:18px 12px 12px;min-height:76px;color:#2B2410;font-size:14px;line-height:1.45;background:linear-gradient(165deg,var(--c) 0%,var(--c) 75%,var(--c2) 100%);box-shadow:2px 6px 8px rgba(0,0,0,.35);display:flex;gap:8px;align-items:flex-start}
+.note::before{content:'';position:absolute;top:-6px;left:50%;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FF8A80,#C62828 60%,#7F0000);box-shadow:1px 3px 3px rgba(0,0,0,.45)}
+.note input[type=checkbox]{margin:2px 0 0;width:15px;height:15px;accent-color:#7A5A00;flex:none;cursor:pointer}
+.note .tx{flex:1;min-width:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.note .x{position:absolute;top:4px;right:5px;width:22px;height:22px;border:none;background:transparent;color:rgba(43,36,16,.45);font-size:12px;cursor:pointer;border-radius:6px;padding:0}
+.note .x:hover{color:#C9302C;background:rgba(255,255,255,.45)}
+.note .rtag{display:inline-block;font-size:10px;font-weight:800;background:#1B2430;color:#FFE873;border-radius:3px;padding:0 5px;margin-right:4px;vertical-align:1px;flex:none}
+.note.ask{flex-direction:column;align-items:stretch;gap:8px}
+.note.ask .q{font-size:13px;font-weight:700}
+.note.ask .bt2{display:flex;gap:6px}
+.note.ask .bt2 button{flex:1;height:26px;border-radius:13px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.note.ask .yes{border:none;background:#1B2430;color:#FFFFFF}
+.note.ask .no{border:1px solid rgba(43,36,16,.35);background:transparent;color:#2B2410}
+.note.draft{--c:#FFFDF0;--c2:#F3EBC8;flex-direction:column;gap:4px}
+.note.draft textarea{width:100%;border:none;background:transparent;resize:none;font-size:14px;line-height:1.45;color:#2B2410;font-family:inherit;outline:none;padding:0}
+.note.draft textarea::placeholder{color:#9A8955}
+.board .ck-pop{top:34px}
 body.lyon .ly-note{display:inline-flex}
-body.lyon .legend{display:none}
+body.lyon .hclock .legend,body.lyon .hclock .date{display:none}
+body.lyon .ly-note{flex-direction:column;align-items:flex-start;gap:4px}
+.mlabel .y,.btn-ghost{white-space:nowrap}
+.title{flex:none}
 .ly-seg{display:inline-flex;border:1px solid #9AA800;border-radius:8px;overflow:hidden}
 .ly-seg button{white-space:nowrap;padding:3px 10px;font-size:12px;font-weight:700;background:#FFFFFF;color:#6B7400;border:none;font-family:inherit;cursor:pointer}
 .ly-seg button.on{background:#6B7400;color:#FFFFFF}
@@ -171,7 +211,7 @@ body.lyback .ly-more{opacity:.6}
 .side{background:var(--navy);color:var(--p-text);border-radius:22px;padding:32px 28px;display:flex;flex-direction:column;gap:22px;min-height:0}
 .card{display:flex;flex-direction:column;gap:10px;min-height:0}
 .card h2{margin:0;font-size:14px;font-weight:700;letter-spacing:1px;color:var(--p-muted)}
-.clock-card,.dday,.foot{flex-shrink:0}
+.clock-card,.dday,.foot,.board{flex-shrink:0}
 .clock-card{flex-direction:row;align-items:stretch;gap:16px;padding-bottom:20px;border-bottom:1px solid var(--p-line)}
 .ck-left{display:flex;flex-direction:column;justify-content:center;gap:6px;flex:none}
 .ck-left .clock{font-size:50px}
@@ -263,7 +303,7 @@ body.searching .memo{display:none}
 body.pastday .todos{display:none}
 body.memoview .todos,body.memoview .dday,body.memoview .memo{display:none}
 body.memoview .day-card{flex:1 1 auto}
-.memo{flex:1 1 auto;min-height:130px;display:flex;flex-direction:column;gap:8px;padding:12px 14px 10px;border-radius:14px;background:#FFF6D8;color:#3B2F12;box-shadow:inset 0 0 0 2px var(--gold)}
+.memo{flex:1 1 auto;min-height:110px;display:flex;flex-direction:column;gap:8px;padding:12px 14px 10px;border-radius:14px;background:#FFF6D8;color:#3B2F12;box-shadow:inset 0 0 0 2px var(--gold)}
 .memo.past{background:#EFE7CC;box-shadow:inset 0 0 0 2px #C9B57A}
 .memo-head{display:flex;align-items:center;gap:6px;flex:none;min-width:0}
 .memo-title{font-size:14px;font-weight:700;margin-right:auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -322,12 +362,12 @@ button.ev-item:hover{background:rgba(255,255,255,.13)}
 .todo-add{height:40px;padding:0 12px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:var(--p-text);font-size:15px;width:100%}
 .todo-add::placeholder{color:var(--p-muted)}
 .todo-add:focus{outline:none;border-color:var(--p-school)}
-.dday{flex-direction:row;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;border-radius:14px;background:var(--gold);color:var(--text)}
-.dday .l{display:flex;flex-direction:column;gap:2px;min-width:0}
-.dday .k{font-size:14px;font-weight:600}
-.dday .n{font-size:20px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dday .d{font-size:14px}
-.dday .v{font-size:46px;font-weight:800;font-variant-numeric:tabular-nums;flex:none}
+.dday{flex-direction:row;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-radius:14px;background:var(--gold);color:var(--text)}
+.dday .l{display:flex;flex-direction:row;align-items:baseline;gap:8px;min-width:0}
+.dday .k{display:none}
+.dday .n{font-size:16px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dday .d{font-size:12px;white-space:nowrap}
+.dday .v{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;flex:none}
 .foot{margin-top:auto;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--p-sub)}
 .foot.err{color:#FFC4C4}
 .foot .dot{background:#7FD1B9;border-radius:50%;width:8px;height:8px;border:none;transform:none}
@@ -454,12 +494,18 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
         <button type="button" class="ly-btn" id="lyBtn" aria-pressed="false"><i></i>작년 일정<span class="st" id="lySt"></span></button>
         <button type="button" class="mp-btn pr-btn" id="prBtn" aria-label="인쇄"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1F3A5F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2.5"/><path d="M7 14h10v6.5H7z" fill="#FFFFFF"/><circle cx="17" cy="12" r="1.1" fill="#F2B84B" stroke="none"/></svg></button>
       </div>
-      <span class="ly-note" id="lyNote"><span id="lyLabel"></span><span class="ly-seg"><button type="button" id="lyWeek">요일 맞춤</button><button type="button" id="lyDate">같은 날짜</button></span></span>
-      <div class="legend">
-        <span class="lg-school"><i class="dot school"></i>학교</span>
-        <span class="lg-personal"><i class="dot personal"></i>개인</span>
-        <span class="lg-pc"><i class="dot pc"></i>PC만</span>
-        <span style="color:var(--hol);font-weight:600">공휴일</span>
+      <div class="hclock">
+        <span class="clock" id="clock"></span>
+        <div class="hd">
+          <span class="date" id="today"></span>
+          <div class="legend">
+            <span class="lg-school"><i class="dot school"></i>학교</span>
+            <span class="lg-personal"><i class="dot personal"></i>개인</span>
+            <span class="lg-pc"><i class="dot pc"></i>PC만</span>
+            <span style="color:var(--hol);font-weight:700">공휴일</span>
+          </div>
+          <span class="ly-note" id="lyNote"><span id="lyLabel"></span><span class="ly-seg"><button type="button" id="lyWeek">요일 맞춤</button><button type="button" id="lyDate">같은 날짜</button></span></span>
+        </div>
       </div>
     </div>
     <div class="week"><span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span></div>
@@ -467,21 +513,21 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
   </section>
 
   <aside class="side" aria-label="오늘">
-    <div class="card clock-card">
-      <div class="ck-left">
-        <span class="clock" id="clock"></span>
-        <span class="date" id="today"></span>
+    <div class="board" id="board">
+      <div class="board-h">
+        <span class="bt">체크리스트</span>
+        <button type="button" class="ck-rv" id="ckRv" style="display:none"></button>
+        <button type="button" class="bd-btn" id="ckNew">+ 새 포스트잇</button>
+        <button type="button" class="bd-btn" id="ckRb">📅 예약</button>
+        <b id="ckCount"></b>
       </div>
-      <div class="ck">
-        <div class="ck-h"><span>체크리스트<button type="button" class="ck-rv" id="ckRv" style="display:none"></button></span><b id="ckCount"></b></div>
-        <div class="ck-list" id="todoList"></div>
-        <div class="ck-addrow">
-          <label class="sr" for="todoAdd">체크리스트 추가</label>
-          <input class="ck-add" id="todoAdd" placeholder="+ 추가 (Enter)" maxlength="100" autocomplete="off">
-          <button type="button" class="ck-rbtn" id="ckRb">📅 예약</button>
-        </div>
-        <div class="ck-pop" id="ckPop" style="display:none"></div>
+      <div class="cork" id="cork"><div class="notes" id="todoList"></div></div>
+      <div class="note draft" id="ckDraft" style="display:none">
+        <span class="rtag" id="ckDraftTag" style="display:none"></span>
+        <label class="sr" for="todoAdd">새 포스트잇 내용</label>
+        <textarea id="todoAdd" rows="2" maxlength="100" placeholder="할 일을 쓰고 Enter"></textarea>
       </div>
+      <div class="ck-pop" id="ckPop" style="display:none"></div>
     </div>
     <div class="card day-card" id="dayCard">
       <div class="day-head">
@@ -1132,7 +1178,7 @@ function shortDate(s) {
 function renderDay() {
   const t = todayDate();
   const ts = ymd(t);
-  $('today').replaceChildren(t.getFullYear() + '년 ' + (t.getMonth() + 1) + '월 ' + t.getDate() + '일', el('br'), WEEK[t.getDay()] + '요일');
+  $('today').textContent = (t.getMonth() + 1) + '월 ' + t.getDate() + '일 ' + WEEK[t.getDay()] + '요일';
   $('searchTools').style.display = state.search ? '' : 'none';
   $('searchClose').style.display = state.search ? '' : 'none';
   $('memoClose').style.display = state.memoMode ? '' : 'none';
@@ -1556,23 +1602,32 @@ function renderDday() {
 
 let ckTimer = null;
 
+const NOTE_COLORS = [['#FFE873', '#F2D24E'], ['#FFC6D3', '#F4A8B9'], ['#C8F0D0', '#A9DDB4'], ['#C9E4FF', '#A9CCF0'], ['#FFD8A8', '#F5BF80']];
+
+function noteColor(text) {
+  let h = 0;
+  for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) >>> 0;
+  return NOTE_COLORS[h % NOTE_COLORS.length];
+}
+
 function renderTodos() {
+  if (state.ckDrafting && document.activeElement === $('todoAdd')) { state.ckPending = true; ckCounts(); return; }
+  state.ckPending = false;
   const list = $('todoList');
   list.replaceChildren();
   if (state.ckAsk && state.todos.indexOf(state.ckAsk) === -1) state.ckAsk = null;
-  const ts = ymd(todayDate());
-  const shown = state.todos.filter((t) => !t.from || t.from <= ts);
-  const waiting = state.todos.filter((t) => t.from && t.from > ts);
-  shown.sort((a, b) => (a.from ? 0 : 1) - (b.from ? 0 : 1) || (a.from || '').localeCompare(b.from || ''));
-  $('ckRv').style.display = waiting.length ? '' : 'none';
-  $('ckRv').textContent = '예약 ' + waiting.length;
-  const left = shown.length;
-  $('ckCount').textContent = left ? left + '개 남음' : '';
-  if (!left) list.appendChild(el('span', 'ck-empty', '비어 있음'));
-  shown.forEach((t) => {
+  const shown = ckCounts();
+  const cols = [el('div', 'col'), el('div', 'col')];
+  if (!shown.length && !state.ckDrafting) {
+    list.appendChild(el('span', 'ck-empty', '붙어 있는 포스트잇이 없어요'));
+  }
+  shown.forEach((t, idx) => {
+    const c = noteColor(t.text);
+    let note;
     if (state.ckAsk === t) {
-      const row = el('div', 'ck-row ask');
-      row.appendChild(el('span', 'q', '삭제할까요?'));
+      note = el('div', 'note ask');
+      note.appendChild(el('span', 'q', '삭제할까요?'));
+      const bt = el('div', 'bt2');
       const yes = el('button', 'yes', '네');
       yes.type = 'button';
       yes.addEventListener('click', () => {
@@ -1584,34 +1639,72 @@ function renderTodos() {
       const no = el('button', 'no', '아니요');
       no.type = 'button';
       no.addEventListener('click', () => { clearTimeout(ckTimer); state.ckAsk = null; renderTodos(); });
-      row.appendChild(yes);
-      row.appendChild(no);
-      row.dataset.tip = t.text;
-      list.appendChild(row);
-      return;
+      bt.appendChild(yes);
+      bt.appendChild(no);
+      note.appendChild(bt);
+    } else {
+      note = el('div', 'note');
+      const cb = el('input');
+      cb.type = 'checkbox';
+      cb.setAttribute('aria-label', t.text + ' 완료');
+      cb.addEventListener('change', () => {
+        clearTimeout(ckTimer);
+        state.ckAsk = t;
+        renderTodos();
+        ckTimer = setTimeout(() => { if (state.ckAsk === t) { state.ckAsk = null; renderTodos(); } }, 5000);
+      });
+      note.appendChild(cb);
+      const tx = el('span', 'tx');
+      if (t.from) tx.appendChild(el('span', 'rtag', '예약'));
+      tx.appendChild(document.createTextNode(t.text));
+      note.appendChild(tx);
+      const del = el('button', 'x', '✕');
+      del.type = 'button';
+      del.setAttribute('aria-label', t.text + ' 떼기');
+      del.addEventListener('click', () => { state.todos.splice(state.todos.indexOf(t), 1); saveTodos(); });
+      note.appendChild(del);
     }
-    const row = el('div', 'ck-row');
-    const lb = el('label');
-    const cb = el('input');
-    cb.type = 'checkbox';
-    cb.addEventListener('change', () => {
-      clearTimeout(ckTimer);
-      state.ckAsk = t;
-      renderTodos();
-      ckTimer = setTimeout(() => { if (state.ckAsk === t) { state.ckAsk = null; renderTodos(); } }, 5000);
-    });
-    lb.appendChild(cb);
-    if (t.from) lb.appendChild(el('span', 'rtag', '예약'));
-    lb.appendChild(el('span', '', t.text));
-    lb.dataset.tip = t.text;
-    const del = el('button', 'del', '✕');
-    del.type = 'button';
-    del.setAttribute('aria-label', t.text + ' 삭제');
-    del.addEventListener('click', () => { state.todos.splice(state.todos.indexOf(t), 1); saveTodos(); });
-    row.appendChild(lb);
-    row.appendChild(del);
-    list.appendChild(row);
+    note.style.setProperty('--c', c[0]);
+    note.style.setProperty('--c2', c[1]);
+    cols[idx % 2].appendChild(note);
   });
+  if (state.ckDrafting) {
+    const d = $('ckDraft');
+    d.style.display = '';
+    cols[shown.length % 2].appendChild(d);
+  }
+  if (shown.length || state.ckDrafting) { list.appendChild(cols[0]); list.appendChild(cols[1]); }
+}
+
+function ckCounts() {
+  const ts = ymd(todayDate());
+  const shown = state.todos.filter((t) => !t.from || t.from <= ts);
+  const waiting = state.todos.filter((t) => t.from && t.from > ts);
+  shown.sort((a, b) => (a.from ? 0 : 1) - (b.from ? 0 : 1) || (a.from || '').localeCompare(b.from || ''));
+  $('ckRv').style.display = waiting.length ? '' : 'none';
+  $('ckRv').textContent = '예약 ' + waiting.length;
+  $('ckCount').textContent = shown.length ? shown.length + '장' : '';
+  return shown;
+}
+
+function ckOpenDraft() {
+  state.ckDrafting = true;
+  const tag = $('ckDraftTag');
+  tag.style.display = state.ckFrom ? '' : 'none';
+  tag.textContent = state.ckFrom ? '📅 ' + (+state.ckFrom.slice(5, 7)) + '/' + (+state.ckFrom.slice(8, 10)) + '부터 보임' : '';
+  renderTodos();
+  const ta = $('todoAdd');
+  $('cork').scrollTop = $('cork').scrollHeight;
+  focusSoon(ta);
+}
+
+function ckCloseDraft() {
+  state.ckDrafting = false;
+  $('todoAdd').value = '';
+  $('ckDraft').style.display = 'none';
+  document.body.appendChild($('ckDraft'));
+  if (state.ckFrom) { state.ckFrom = ''; ckSetBtn(); }
+  renderTodos();
 }
 
 function ckCloseAll() {
@@ -1622,6 +1715,8 @@ function ckCloseAll() {
 
 function ckSetBtn() {
   const f = state.ckFrom;
+  const tag = $('ckDraftTag');
+  if (tag) { tag.style.display = f ? '' : 'none'; tag.textContent = f ? '📅 ' + (+f.slice(5, 7)) + '/' + (+f.slice(8, 10)) + '부터 보임' : ''; }
   $('ckRb').classList.toggle('on', !!f);
   $('ckRb').textContent = f ? '📅 ' + (+f.slice(5, 7)) + '/' + (+f.slice(8, 10)) : '📅 예약';
 }
@@ -1704,7 +1799,7 @@ function ckRenderPick() {
     ckCloseAll();
     const v = $('todoAdd').value.trim();
     if (v) ckAdd(v);
-    else { ckSetBtn(); focusSoon($('todoAdd')); }
+    else { ckSetBtn(); ckOpenDraft(); }
   });
   ft.appendChild(cancel);
   ft.appendChild(ok);
@@ -1755,8 +1850,12 @@ function ckAdd(v) {
   state.ckFrom = '';
   ckSetBtn();
   $('todoAdd').value = '';
+  state.ckDrafting = false;
+  $('ckDraft').style.display = 'none';
+  document.body.appendChild($('ckDraft'));
+  if (document.activeElement === $('todoAdd')) $('todoAdd').blur();
   saveTodos();
-  if (!item.from) $('todoList').scrollTop = $('todoList').scrollHeight;
+  if (!item.from) setTimeout(() => { $('cork').scrollTop = $('cork').scrollHeight; }, 0);
 }
 
 function renderFoot() {
@@ -2290,10 +2389,25 @@ $('evBackdrop').addEventListener('click', (e) => { if (e.target === $('evBackdro
 $('fTitle').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) saveModal(); });
 $('evBackdrop').addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 $('todoAdd').addEventListener('keydown', (e) => {
-  if (e.key !== 'Enter' || e.isComposing) return;
+  if (e.key === 'Escape') { e.preventDefault(); ckCloseDraft(); return; }
+  if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+  e.preventDefault();
   const v = e.target.value.trim();
   if (!v) return;
   ckAdd(v);
+});
+$('todoAdd').addEventListener('blur', () => {
+  setTimeout(() => {
+    if (!state.ckDrafting || document.activeElement === $('todoAdd') || state.ckPick) return;
+    const v = $('todoAdd').value.trim();
+    if (v) ckAdd(v); else ckCloseDraft();
+  }, 150);
+});
+['ckNew', 'ckRb'].forEach((id) => $(id).addEventListener('mousedown', (e) => e.preventDefault()));
+$('ckNew').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (state.ckDrafting) { focusSoon($('todoAdd')); return; }
+  ckOpenDraft();
 });
 $('ckRb').addEventListener('click', (e) => {
   e.stopPropagation();
