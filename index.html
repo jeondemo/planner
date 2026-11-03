@@ -32,8 +32,18 @@ button:not(:disabled):hover{transform:scale(1.07)}
 .chip,.duty{transition:transform .12s ease,filter .12s ease}
 .chip:not(.holiday):hover{transform:translateY(-1px);filter:brightness(.95)}
 .duty:hover{transform:scale(1.06)}
-.ev-item{transition:transform .12s ease}
-.ev-item:hover{transform:translateX(3px)}
+.ev-item{transition:background-color .12s ease,box-shadow .12s ease}
+.side .ev-item:hover{background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+button.ev-item:hover,.side .list button:hover,.add-btn:hover{transform:none}
+.add-btn:hover{background:rgba(255,255,255,.08)}
+.list,#todayList{overflow-x:hidden}
+.side ::-webkit-scrollbar{width:6px;height:6px}
+.side ::-webkit-scrollbar-track{background:transparent}
+.side ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.22);border-radius:3px}
+.side ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.4)}
+.side ::-webkit-scrollbar-button{display:none}
+.side ::-webkit-scrollbar-corner{background:transparent}
+.cork::-webkit-scrollbar-thumb{background:rgba(60,35,10,.35)}
 .app{height:100vh;padding:40px 40px 40px 48px;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:40px}
 .cal{display:flex;flex-direction:column;gap:16px;min-width:0;min-height:0;padding-top:8px}
 .head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding-bottom:16px;border-bottom:3px solid var(--navy)}
