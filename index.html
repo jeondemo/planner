@@ -56,6 +56,31 @@ button,input,textarea{font-family:inherit}
 .duty .sw::after{content:' ⇄'}
 .cell.out .duty{opacity:.6}
 .mp.dt{width:340px}
+.duty{cursor:pointer}
+.duty:hover,.duty.edit{box-shadow:0 0 0 2px #2BA88A}
+.de{position:fixed;z-index:90;width:380px;background:#FFFFFF;border:1px solid #D5DBE2;border-radius:16px;box-shadow:0 18px 44px rgba(20,30,45,.25);padding:16px;display:flex;flex-direction:column;gap:12px;color:#1B2430}
+.de h4{margin:0;font-size:16px;display:flex;justify-content:space-between;align-items:center}
+.de h4 small{font-size:12px;color:#5A6573;font-weight:500}
+.de .tabs{display:flex;gap:6px}
+.de .tabs button{flex:1;height:42px;border-radius:10px;border:1px solid #D5DBE2;background:#FFFFFF;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;color:#5A6573;cursor:pointer;font-family:inherit;line-height:1.3}
+.de .tabs button b{font-size:14px;color:#1B2430}
+.de .tabs button.on{border:2px solid #2BA88A;background:#E9F8F3}
+.de .cur{font-size:13px;color:#4A5562;background:#F4F6F9;border-radius:10px;padding:8px 10px;line-height:1.5}
+.de .cur b{color:#B4235A}
+.de .ng{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;max-height:220px;overflow-y:auto}
+.de .ng button{height:32px;border-radius:8px;border:1px solid #E3E8EE;background:#FFFFFF;color:#1B2430;font-size:13px;cursor:pointer;font-family:inherit;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.de .ng button:hover{border-color:#5A6573}
+.de .ng button.was{border-style:dashed;color:#8E97A1}
+.de .ng button.on{background:#14594A;border-color:#14594A;color:#FFFFFF;font-weight:700}
+.de .ng button.add{grid-column:span 2;border-style:dashed;border-color:#2BA88A;color:#14594A;font-weight:600}
+.de .typ{display:flex;gap:6px}
+.de .typ input{flex:1;height:36px;border-radius:8px;border:2px solid #2BA88A;padding:0 10px;font-size:14px;font-family:inherit}
+.de .typ input:focus{outline:none}
+.de .ft{display:flex;gap:8px}
+.de .ft button{flex:1;height:38px;border-radius:10px;font-size:14px;font-weight:600;border:1px solid #D5DBE2;background:#FFFFFF;color:#1B2430;cursor:pointer;font-family:inherit}
+.de .ft .ok{background:#1F3A5F;color:#FFFFFF;border-color:#1F3A5F}
+.de .ft .ok:disabled{opacity:.4;cursor:default}
+.de .msg{font-size:13px;color:#8A1F1B}
 .dt .drow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#F4F6F9}
 .dt .drow .ic{font-size:18px;flex:none}
 .dt .drow .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
@@ -975,7 +1000,8 @@ function dutyBox(ds) {
     return d ? { label: x[1], name: d[0], orig: d[1] } : null;
   }).filter(Boolean);
   if (!rows.length) return null;
-  const box = el('span', 'duty');
+  const box = el('span', 'duty' + (state.de && state.de.ds === ds ? ' edit' : ''));
+  box.addEventListener('click', (e) => { e.stopPropagation(); deOpen(ds, box); });
   rows.forEach((r) => {
     const line = el('span', (r.label === '급식' ? 'meal' : '') + (r.orig ? ' sw' : ''));
     line.appendChild(el('b', '', r.label));
@@ -984,6 +1010,156 @@ function dutyBox(ds) {
     box.appendChild(line);
   });
   return box;
+}
+
+function dutyNames() {
+  const set = new Set();
+  const du = state.duty || {};
+  ['yaja', 'meal'].forEach((t) => {
+    const days = (du[t] && du[t].days) || {};
+    Object.keys(days).forEach((k) => { if (days[k][0]) set.add(days[k][0]); if (days[k][1]) set.add(days[k][1]); });
+  });
+  return Array.from(set).sort((a, b) => a.localeCompare(b, 'ko'));
+}
+
+function deInfo(type, ds) {
+  const d = state.duty && state.duty[type] && state.duty[type].days && state.duty[type].days[ds];
+  return { name: d ? d[0] : '', orig: d ? (d[1] || d[0]) : '' };
+}
+
+function deClose() {
+  if (!state.de) return;
+  state.de = null;
+  const pop = $('dePop');
+  if (pop) pop.remove();
+  renderGrid();
+}
+
+function deOpen(ds, anchor) {
+  if (state.mp) mpClose();
+  if (state.pr) prClose();
+  if (state.dt) dtClose();
+  const hasY = !!deInfo('yaja', ds).name;
+  state.de = { ds: ds, type: hasY ? 'yaja' : 'meal', pick: '', typing: false, msg: '', busy: false, ax: 0, ay: 0 };
+  state.selAt = Date.now();
+  const r = anchor.getBoundingClientRect();
+  state.de.ax = r.left;
+  state.de.ay = r.bottom + 8;
+  renderGrid();
+  deRender();
+}
+
+function deRender() {
+  const de = state.de;
+  if (!de) return;
+  let pop = $('dePop');
+  if (!pop) {
+    pop = el('div', 'de');
+    pop.id = 'dePop';
+    pop.setAttribute('role', 'dialog');
+    pop.addEventListener('click', (e) => e.stopPropagation());
+    document.body.appendChild(pop);
+  }
+  pop.replaceChildren();
+  const d = parseYmd(de.ds);
+  const h = el('h4', '', (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + WEEK[d.getDay()] + ') 근무 바꾸기');
+  if (de.ds === ymd(todayDate())) h.appendChild(el('small', '', '오늘'));
+  pop.appendChild(h);
+  const tabs = el('div', 'tabs');
+  [['yaja', '🌙 야자'], ['meal', '🍚 급식']].forEach((t) => {
+    const info = deInfo(t[0], de.ds);
+    const b = el('button', de.type === t[0] ? 'on' : '');
+    b.type = 'button';
+    b.appendChild(el('b', '', t[1]));
+    b.appendChild(document.createTextNode(info.name || '없음'));
+    b.addEventListener('click', () => { de.type = t[0]; de.pick = ''; de.typing = false; deRender(); });
+    tabs.appendChild(b);
+  });
+  pop.appendChild(tabs);
+  const info = deInfo(de.type, de.ds);
+  const cur = el('div', 'cur');
+  let txt = '';
+  if (info.orig && info.orig !== info.name) txt += '원래 감독: ' + info.orig + ' → ';
+  txt += '지금: ' + (info.name || '없음');
+  cur.appendChild(document.createTextNode(txt));
+  if (de.pick) {
+    cur.appendChild(document.createTextNode(' → '));
+    cur.appendChild(el('b', '', de.pick));
+    cur.appendChild(document.createTextNode('(으)로 바꾸기'));
+  } else {
+    cur.appendChild(document.createTextNode(' · 아래에서 대신 근무할 선생님을 고르세요'));
+  }
+  pop.appendChild(cur);
+  const ng = el('div', 'ng');
+  dutyNames().forEach((n) => {
+    const b = el('button', n === de.pick ? 'on' : n === info.name ? 'was' : '', n);
+    b.type = 'button';
+    b.addEventListener('click', () => { de.pick = n; de.typing = false; deRender(); });
+    ng.appendChild(b);
+  });
+  const add = el('button', 'add', '+ 직접 입력');
+  add.type = 'button';
+  add.addEventListener('click', () => { de.typing = true; deRender(); });
+  ng.appendChild(add);
+  pop.appendChild(ng);
+  if (de.typing) {
+    const typ = el('div', 'typ');
+    const inp = el('input');
+    inp.id = 'deInput';
+    inp.maxLength = 10;
+    inp.placeholder = '선생님 이름';
+    inp.autocomplete = 'off';
+    inp.setAttribute('aria-label', '선생님 이름 직접 입력');
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); const v = inp.value.trim(); if (v) { de.pick = v; deSave(false); } }
+      if (e.key === 'Escape') { e.preventDefault(); de.typing = false; deRender(); }
+    });
+    inp.addEventListener('input', () => { state.selAt = Date.now(); });
+    typ.appendChild(inp);
+    pop.appendChild(typ);
+    focusSoon(inp);
+  }
+  if (de.msg) pop.appendChild(el('div', 'msg', de.msg));
+  const ft = el('div', 'ft');
+  const reset = el('button', '', '원래대로');
+  reset.type = 'button';
+  reset.disabled = !info.orig || info.orig === info.name;
+  reset.addEventListener('click', () => deSave(true));
+  const cancel = el('button', '', '취소');
+  cancel.type = 'button';
+  cancel.addEventListener('click', () => deClose());
+  const ok = el('button', 'ok', de.busy ? '저장 중…' : '저장');
+  ok.type = 'button';
+  ok.disabled = de.busy || (!de.pick && !de.typing);
+  ok.addEventListener('click', () => {
+    if (de.typing) { const v = ($('deInput') || {}).value; if (v && v.trim()) de.pick = v.trim(); }
+    if (de.pick) deSave(false);
+  });
+  ft.appendChild(reset);
+  ft.appendChild(cancel);
+  ft.appendChild(ok);
+  pop.appendChild(ft);
+  const w = 380;
+  const left = Math.max(8, Math.min(de.ax, window.innerWidth - w - 8));
+  pop.style.left = left + 'px';
+  pop.style.top = '0px';
+  const ph = pop.offsetHeight;
+  pop.style.top = (de.ay + ph > window.innerHeight - 8 ? Math.max(8, de.ay - ph - 50) : de.ay) + 'px';
+}
+
+async function deSave(reset) {
+  const de = state.de;
+  if (!de || de.busy) return;
+  de.busy = true;
+  de.msg = '';
+  deRender();
+  try {
+    const res = await api('setDutyDay', { type: de.type, date: de.ds, name: reset ? '' : de.pick, reset: !!reset }, true);
+    state.duty = res.duty;
+    deClose();
+  } catch (err) {
+    if (state.de) { state.de.busy = false; state.de.msg = '저장 실패: ' + err.message; deRender(); }
+  }
 }
 
 let xlsxReady = null;
@@ -2502,10 +2678,11 @@ function tick() {
   const k = ymd(d);
   if (state.dayKey && state.dayKey !== k) { state.y = d.getFullYear(); state.m = d.getMonth(); state.sel = ''; load(); }
   state.dayKey = k;
-  const typing = [$('searchInput'), $('memoFindInput')].indexOf(document.activeElement) !== -1;
+  const typing = [$('searchInput'), $('memoFindInput'), $('deInput')].indexOf(document.activeElement) !== -1;
   const away = state.y !== d.getFullYear() || state.m !== d.getMonth();
   if ((state.sel || state.reorder || state.search || state.memoMode || state.ly.on || away) && !state.modal && !typing && Date.now() - state.selAt > SEL_RESET_MS) {
     if (state.mp) mpClose();
+    if (state.de) { state.de = null; const dp = $('dePop'); if (dp) dp.remove(); }
     state.sel = '';
     if (state.ly.on) { state.ly.on = false; state.ly.back = false; document.body.classList.remove('lyon', 'lyback'); $('lyBtn').classList.remove('on'); $('lyBtn').setAttribute('aria-pressed', 'false'); $('lySt').textContent = ''; }
     state.reorder = false;
@@ -2603,7 +2780,8 @@ $('prPop').addEventListener('click', (e) => e.stopPropagation());
 $('dtBtn').addEventListener('click', (e) => { e.stopPropagation(); if (state.dt) dtClose(); else dtOpen(); });
 $('dtPop').addEventListener('click', (e) => e.stopPropagation());
 $('dtFile').addEventListener('change', () => dtUpload($('dtFile').files[0]));
-document.addEventListener('click', () => { if (state.dt) dtClose(); });
+document.addEventListener('click', () => { if (state.dt) dtClose(); if (state.de) deClose(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && state.de && !(document.activeElement && document.activeElement.id === 'deInput')) deClose(); });
 document.addEventListener('click', () => { if (state.pr) prClose(); });
 document.addEventListener('click', () => { if (state.mp) mpClose(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && state.mp) mpClose(); });
