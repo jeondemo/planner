@@ -23,6 +23,17 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-famil
 button,input,textarea{font-family:inherit}
 button:not(:disabled),[role=button],.cell,.chip:not(.holiday),.duty,.ev-item,.pill,.ck-rv,input[type=checkbox],select,.mlabel .y{cursor:pointer}
 button:disabled{cursor:default}
+button{transition:transform .12s ease,box-shadow .12s ease,background-color .12s ease}
+button:not(:disabled):hover{transform:scale(1.07)}
+.head button:not(:disabled):hover{box-shadow:0 4px 12px rgba(31,58,95,.22)}
+.head .mlabel .y:hover{transform:none;box-shadow:none}
+.tabs button:hover,.seg button:hover,.ly-seg button:hover,.tm-seg button:hover,.mini-grid button:hover,.tp-grid button:hover,.ng button:hover,.ms button:hover,.qk button:hover,.quick button:hover,.cals button:hover{transform:scale(1.04)}
+.cell{transition:background-color .12s ease}
+.chip,.duty{transition:transform .12s ease,filter .12s ease}
+.chip:not(.holiday):hover{transform:translateY(-1px);filter:brightness(.95)}
+.duty:hover{transform:scale(1.06)}
+.ev-item{transition:transform .12s ease}
+.ev-item:hover{transform:translateX(3px)}
 .app{height:100vh;padding:40px 40px 40px 48px;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:40px}
 .cal{display:flex;flex-direction:column;gap:16px;min-width:0;min-height:0;padding-top:8px}
 .head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding-bottom:16px;border-bottom:3px solid var(--navy)}
@@ -253,7 +264,8 @@ body.lyback .ly-more{opacity:.6}
 .week span:last-child{color:var(--sat)}
 .grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--grid);border:1px solid var(--grid)}
 .cell{background:var(--card);padding:10px 12px;display:flex;flex-direction:column;gap:5px;overflow:hidden;cursor:pointer;min-height:0}
-.cell:hover{background:#F8FAFC}
+.cell:hover{background:#EEF3FA}
+.cell.today:hover{background:#FFEBB8}
 .cell.out{background:var(--card2)}
 .cell.today{background:var(--today);box-shadow:inset 0 0 0 3px var(--accent)}
 .cell.sel{background:#F1F6FF;box-shadow:inset 0 0 0 3px var(--school)}
