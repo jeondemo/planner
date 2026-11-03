@@ -49,6 +49,9 @@ button,input,textarea{font-family:inherit}
 .mp .ms button.sel small{color:#C9D6E6}
 .mp .ft{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#5A6573}
 .pr-btn{margin-left:8px;flex:none}
+.dt-btn{padding:0;overflow:hidden;border:1.5px solid #1F3A5F}
+.head .btn-icon,.head .btn-ghost,.head .mp-btn,.head .ly-btn:not(.on),.head .search input{border:1.5px solid var(--navy)}
+.dt-btn.on{box-shadow:0 0 0 3px rgba(31,58,95,.2)}
 .duty{display:inline-flex;flex-direction:column;gap:1px;padding:2px 7px;border-radius:5px;background:#DDF4EE;font-size:10.5px;line-height:1.25;font-weight:600;color:#14594A;white-space:nowrap;flex:none}
 .duty span b{font-weight:700;color:#2BA88A;margin-right:4px}
 .duty .sw{color:#B4235A}
@@ -544,7 +547,7 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
           <button class="btn-icon" id="prev" aria-label="이전 달">‹</button>
           <button class="btn-icon" id="next" aria-label="다음 달">›</button>
           <button class="btn-ghost" id="goToday">오늘</button>
-          <button type="button" class="mp-btn" id="mpBtn" aria-label="연도·달 바로 가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1F3A5F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.4" fill="#F2B84B" stroke="none"/></svg></button>
+          <button type="button" class="mp-btn" id="mpBtn" aria-label="연도·달 바로 가기"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1F3A5F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.4" fill="#F2B84B" stroke="none"/></svg></button>
         </div>
         <div class="search" id="searchWrap">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A6573" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
@@ -553,8 +556,8 @@ body.popup .dialog{width:100%;max-width:none;height:100vh;border:none;border-rad
           <button id="searchClear" type="button" aria-label="검색어 지우기">✕</button>
         </div>
         <button type="button" class="ly-btn" id="lyBtn" aria-pressed="false"><i></i>작년 일정<span class="st" id="lySt"></span></button>
-        <button type="button" class="mp-btn pr-btn" id="prBtn" aria-label="인쇄"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1F3A5F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2.5"/><path d="M7 14h10v6.5H7z" fill="#FFFFFF"/><circle cx="17" cy="12" r="1.1" fill="#F2B84B" stroke="none"/></svg></button>
-        <button type="button" class="mp-btn pr-btn" id="dtBtn" aria-label="근무표 올리기"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5H6.5a4 4 0 0 0-4 4v9a4 4 0 0 0 4 4H12z" fill="#1F3A5F"/><rect x="2.5" y="3.5" width="19" height="17" rx="4" stroke="#1F3A5F" stroke-width="1.8"/><path d="M7.6 8.2a4.1 4.1 0 1 0 3.4 6.5A3.3 3.3 0 0 1 7.6 8.2z" fill="#F2B84B"/><path d="M5.2 5.6l.35.8.8.3-.8.3-.35.8-.35-.8-.8-.3.8-.3z" fill="#FFE7A8"/><circle cx="10.6" cy="10.6" r=".6" fill="#FFE7A8"/><path d="M15 7.2v3.1M16.8 7.2v3.1M18.6 7.2v3.1M15 10.3a1.8 1.8 0 0 0 3.6 0M16.8 12.1v4.9" stroke="#1F3A5F" stroke-width="1.25"/></svg></button>
+        <button type="button" class="mp-btn pr-btn" id="prBtn" aria-label="인쇄"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#1F3A5F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2.5"/><path d="M7 14h10v6.5H7z" fill="#FFFFFF"/><circle cx="17" cy="12" r="1.1" fill="#F2B84B" stroke="none"/></svg></button>
+        <button type="button" class="mp-btn pr-btn dt-btn" id="dtBtn" aria-label="근무표 올리기"><svg width="100%" height="100%" viewBox="0 0 44 44" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 0A22 22 0 0 0 22 44z" fill="#1F3A5F"/><path d="M15 13.5a8.2 8.2 0 1 0 6 13A6.6 6.6 0 0 1 15 13.5z" fill="#F2B84B"/><path d="M9.5 11l.6 1.4 1.4.5-1.4.5-.6 1.4-.6-1.4-1.4-.5 1.4-.5z" fill="#FFE7A8"/><circle cx="19.6" cy="17.8" r="1" fill="#FFE7A8"/><path d="M27 13v5.5M30.3 13v5.5M33.6 13v5.5M27 18.5a3.3 3.3 0 0 0 6.6 0M30.3 21.8v9.5" stroke="#1F3A5F" stroke-width="2.1"/></svg></button>
         <input type="file" id="dtFile" accept=".xlsx,.xls" style="display:none">
       </div>
       <div class="hclock">
